@@ -11,5 +11,7 @@ func SetupAuthRoutes(api *gin.RouterGroup, authHandler *handlers.AuthHandler) {
         auth.POST("/signin", authHandler.Login)
         auth.POST("/signup", authHandler.Register)
         auth.POST("/check-email", authHandler.CheckEmail)
+        auth.POST("/verify-email", authHandler.VerifyEmail)
+        auth.POST("/resend-code", authHandler.ResendVerificationCode)
     }
 }

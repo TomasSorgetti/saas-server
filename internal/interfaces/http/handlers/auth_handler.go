@@ -12,6 +12,7 @@ import (
 )
 
 type AuthHandler struct {
+    loginUC   *auth.LoginUseCase
     registerUC   *auth.RegisterUserUseCase
     checkEmailUC *auth.CheckEmailUseCase
 	verifyEmailUC *auth.VerifyEmailUseCase
@@ -19,8 +20,9 @@ type AuthHandler struct {
 }
 
 
-func NewAuthHandler(register *auth.RegisterUserUseCase, checkEmail *auth.CheckEmailUseCase, verifyEmail *auth.VerifyEmailUseCase, resendVerificationCode *auth.ResendVerificationCodeUseCase) *AuthHandler {
+func NewAuthHandler(login *auth.LoginUseCase, register *auth.RegisterUserUseCase, checkEmail *auth.CheckEmailUseCase, verifyEmail *auth.VerifyEmailUseCase, resendVerificationCode *auth.ResendVerificationCodeUseCase) *AuthHandler {
     return &AuthHandler{
+		loginUC:          login,
         registerUC:          register,
         checkEmailUC:       checkEmail,
 		verifyEmailUC:      verifyEmail,
@@ -29,7 +31,19 @@ func NewAuthHandler(register *auth.RegisterUserUseCase, checkEmail *auth.CheckEm
 }
 
 func (h *AuthHandler) Login(c *gin.Context) {
-	c.Error(customErr.New(http.StatusBadRequest, "Invalid input data", "Expected JSON body with email and password"))
+	var input dtos.LoginInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input data"})
+		return
+	}
+	
+	result, err := h.loginUC.Execute(input)
+	if err != nil {
+		c.Error(customErr.New(http.StatusBadRequest, "Invalid input data", err.Error()))
+		return
+	}
+
+	c.JSON(http.StatusCreated, result)
 }
 
 func (h *AuthHandler) Register(c *gin.Context) {
