@@ -58,3 +58,9 @@ func (r *emailVerificationRepository) DeleteByUserID(ctx context.Context, userID
 	_, err := r.db.ExecContext(ctx, query, userID)
 	return err
 }
+
+func (r *emailVerificationRepository) UpdateCode(ctx context.Context, id int64, newCode string) error {
+	query := `UPDATE email_verifications SET verification_code = ? WHERE id = ?`
+	_, err := r.db.ExecContext(ctx, query, newCode, id)
+	return err
+}

@@ -23,7 +23,7 @@ func NewVerifyEmailUseCase(userRepo repository.UserRepository, emailVerification
 func (uc *VerifyEmailUseCase) Execute(verificationToken string, verificationCode string) (bool, error) {
 	ctx := context.TODO()
 
-	userId, verificationExpiresAt, err := security.ValidateVerificationToken(verificationToken)
+	userId, _, verificationExpiresAt, err := security.ValidateVerificationToken(verificationToken)
 	if err != nil {
 		return false, err
 	}

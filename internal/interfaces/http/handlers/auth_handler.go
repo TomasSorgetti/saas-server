@@ -15,14 +15,16 @@ type AuthHandler struct {
     registerUC   *auth.RegisterUserUseCase
     checkEmailUC *auth.CheckEmailUseCase
 	verifyEmailUC *auth.VerifyEmailUseCase
+	resendVerificationCodeUC *auth.ResendVerificationCodeUseCase
 }
 
 
-func NewAuthHandler(register *auth.RegisterUserUseCase, checkEmail *auth.CheckEmailUseCase, verifyEmail *auth.VerifyEmailUseCase) *AuthHandler {
+func NewAuthHandler(register *auth.RegisterUserUseCase, checkEmail *auth.CheckEmailUseCase, verifyEmail *auth.VerifyEmailUseCase, resendVerificationCode *auth.ResendVerificationCodeUseCase) *AuthHandler {
     return &AuthHandler{
-        registerUC:   register,
-        checkEmailUC: checkEmail,
-		verifyEmailUC: verifyEmail,
+        registerUC:          register,
+        checkEmailUC:       checkEmail,
+		verifyEmailUC:      verifyEmail,
+		resendVerificationCodeUC: resendVerificationCode,
     }
 }
 
@@ -86,4 +88,25 @@ func (h *AuthHandler) VerifyEmail(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Email verified successfully"})
+}
+
+func (h *AuthHandler) ResendVerificationCode(c *gin.Context) {
+	var input dtos.VerifyEmailResendInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.Error(customErr.New(http.StatusBadRequest, "Invalid input data", err.Error()))
+		return
+	}
+
+	success, err := h.resendVerificationCodeUC.Execute(input.VerificationToken)
+	if err != nil {
+		c.Error(customErr.New(http.StatusInternalServerError, "Failed to resend verification code", err.Error()))
+		return
+	}
+
+	if !success {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Failed to resend verification code"})
+		return
+	}
+	
+	c.JSON(http.StatusOK, gin.H{"message": "Verification code resent successfully"})
 }

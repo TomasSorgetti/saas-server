@@ -11,4 +11,5 @@ type EmailVerificationRepository interface {
 	GetByUserID(ctx context.Context, userID int64) (*entities.EmailVerification, error)
 	MarkAsVerified(ctx context.Context, userID int64) error
 	DeleteByUserID(ctx context.Context, userID int64) error
+	UpdateCode(ctx context.Context, id int64, newCode string) error
 }

@@ -9,6 +9,7 @@ type AuthUseCases struct {
     Register   *RegisterUserUseCase
     CheckEmail *CheckEmailUseCase
     VerifyEmail *VerifyEmailUseCase
+    ResendVerificationCode *ResendVerificationCodeUseCase
 }
 
 func NewAuthUseCases(userRepo repository.UserRepository, emailVerificationRepo repository.EmailVerificationRepository, emailService *email.EmailService) *AuthUseCases{
@@ -16,5 +17,6 @@ func NewAuthUseCases(userRepo repository.UserRepository, emailVerificationRepo r
         Register:   NewRegisterUserUseCase(userRepo, emailService),
         CheckEmail: NewCheckEmailUseCase(userRepo),
         VerifyEmail: NewVerifyEmailUseCase(userRepo, emailVerificationRepo),
+        ResendVerificationCode: NewResendVerificationCodeUseCase(userRepo, emailVerificationRepo, emailService),
     }
 }
