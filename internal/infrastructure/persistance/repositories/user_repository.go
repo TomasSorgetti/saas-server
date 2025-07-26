@@ -9,17 +9,17 @@ import (
 	"github.com/go-sql-driver/mysql"
 )
 
-type MySQLUserRepository struct {
+type UserRepository struct {
 	db *sql.DB
 }
 
 var ErrEmailAlreadyExists = errors.New("email already exists")
 
-func NewMySQLUserRepository(db *sql.DB) *MySQLUserRepository {
-	return &MySQLUserRepository{db: db}
+func NewUserRepository(db *sql.DB) *UserRepository {
+	return &UserRepository{db: db}
 }
 
-func (r *MySQLUserRepository) Save(user *entities.User) (int64, error) {
+func (r *UserRepository) Save(user *entities.User) (int64, error) {
 	query := `
         INSERT INTO users (
             email, password, role, first_name, last_name, phone, address, country,
@@ -47,7 +47,7 @@ func (r *MySQLUserRepository) Save(user *entities.User) (int64, error) {
 	return id, nil
 }
 
-func (r *MySQLUserRepository) CreateEmailVerification(userID int64, code string, expiresAt time.Time) error {
+func (r *UserRepository) CreateEmailVerification(userID int64, code string, expiresAt time.Time) error {
 	query := `
         INSERT INTO email_verifications (user_id, verification_code, expires_at)
         VALUES (?, ?, ?)
@@ -56,7 +56,7 @@ func (r *MySQLUserRepository) CreateEmailVerification(userID int64, code string,
 	return err
 }
 
-func (r *MySQLUserRepository) FindByID(id int64) (*entities.User, error) {
+func (r *UserRepository) FindByID(id int64) (*entities.User, error) {
 	query := `
         SELECT id, email, password, role, first_name, last_name, phone, address, country,
                workshop_name, is_active, deleted, last_login
@@ -80,7 +80,7 @@ func (r *MySQLUserRepository) FindByID(id int64) (*entities.User, error) {
 	return &user, nil
 }
 
-func (r *MySQLUserRepository) FindByEmail(email string) (*entities.User, error) {
+func (r *UserRepository) FindByEmail(email string) (*entities.User, error) {
 	query := `
         SELECT id, email, password, role, first_name, last_name, phone, address, country,
                workshop_name, is_active, deleted, last_login
@@ -104,7 +104,7 @@ func (r *MySQLUserRepository) FindByEmail(email string) (*entities.User, error) 
 	return &user, nil
 }
 
-func (r *MySQLUserRepository) FindAll() ([]*entities.User, error) {
+func (r *UserRepository) FindAll() ([]*entities.User, error) {
 	query := `
         SELECT id, email, password, role, first_name, last_name, phone, address, country,
                workshop_name, is_active, deleted, last_login

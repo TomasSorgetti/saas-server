@@ -18,7 +18,8 @@ type Container struct {
 
 func NewContainer(db *sql.DB) (*Container, *email.EmailService) {
 	// Repositorios
-	userRepo := repositories.NewMySQLUserRepository(db)
+	userRepo := repositories.NewUserRepository(db)
+	emailVerificationRepo := repositories.NewEmailVerificationRepository(db)
 
 	// Client Redis
 	redisClient := redis.NewClient(&redis.Options{
@@ -32,10 +33,10 @@ func NewContainer(db *sql.DB) (*Container, *email.EmailService) {
 	emailService := email.NewEmailService(emailQueue)
 
 	// Use cases
-	authUC := authUC.NewAuthUseCases(userRepo, emailService)
+	authUC := authUC.NewAuthUseCases(userRepo, emailVerificationRepo, emailService)
 
 	// Handlers
-	authHandler := handlers.NewAuthHandler(authUC.Register, authUC.CheckEmail)
+	authHandler := handlers.NewAuthHandler(authUC.Register, authUC.CheckEmail, authUC.VerifyEmail)
 
 	return &Container{
 		AuthHandler: authHandler,

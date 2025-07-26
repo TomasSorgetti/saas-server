@@ -62,7 +62,7 @@ func (uc *RegisterUserUseCase) Execute(input dtos.RegisterInput) (*dtos.Register
 		return nil, err
 	}
 
-	verificationToken, err := security.CreateVerificationToken(userID, code, expiresAt)
+	verificationToken, err := security.CreateVerificationToken(userID, expiresAt)
 	if err != nil {
 		return nil, err
 	}

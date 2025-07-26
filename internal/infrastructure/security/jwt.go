@@ -18,7 +18,6 @@ type Claims struct {
 }
 type VerificationClaims struct {
 	UserID               int64 `json:"user_id"`
-	Code                 string `json:"code"`
 	VerificationExpiresAt time.Time `json:"verification_expires_at"`
 	jwt.RegisteredClaims
 }
@@ -59,7 +58,7 @@ func CreateRefreshToken(userID int64) (string, error) {
 	return token.SignedString([]byte(secret))
 }
 
-func CreateVerificationToken(userID int64, code string, verificationExpiresAt time.Time) (string, error) {
+func CreateVerificationToken(userID int64, verificationExpiresAt time.Time) (string, error) {
 	secret := os.Getenv("JWT_REFRESH_SECRET")
 	if secret == "" {
 		return "", errors.New("JWT_REFRESH_SECRET not set")
@@ -67,7 +66,6 @@ func CreateVerificationToken(userID int64, code string, verificationExpiresAt ti
 
 	claims := &VerificationClaims{
 		UserID: userID,
-		Code: code,
 		VerificationExpiresAt: verificationExpiresAt,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(7 * 24 * time.Hour)),
@@ -88,8 +86,25 @@ func ValidateRefreshToken(tokenStr string) (int64, error) {
 	return validateToken(tokenStr, os.Getenv("JWT_REFRESH_SECRET"))
 }
 
-func ValidateVerificationToken(tokenStr string) (int64, error) {
-	return validateToken(tokenStr, os.Getenv("JWT_VERIFICATION_SECRET"))
+func ValidateVerificationToken(tokenStr string) (int64, time.Time, error) {
+	secret := os.Getenv("JWT_VERIFICATION_SECRET")
+	if secret == "" {
+		return 0, time.Time{}, errors.New("JWT_VERIFICATION_SECRET not set")
+	}
+
+	token, err := jwt.ParseWithClaims(tokenStr, &VerificationClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(secret), nil
+	})
+	if err != nil || !token.Valid {
+		return 0, time.Time{}, errors.New("invalid token")
+	}
+
+	claims, ok := token.Claims.(*VerificationClaims)
+	if !ok {
+		return 0, time.Time{}, errors.New("invalid claims")
+	}
+
+	return claims.UserID, claims.VerificationExpiresAt, nil
 }
 
 func validateToken(tokenStr, secret string) (int64, error) {

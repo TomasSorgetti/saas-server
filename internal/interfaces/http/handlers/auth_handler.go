@@ -14,13 +14,15 @@ import (
 type AuthHandler struct {
     registerUC   *auth.RegisterUserUseCase
     checkEmailUC *auth.CheckEmailUseCase
+	verifyEmailUC *auth.VerifyEmailUseCase
 }
 
 
-func NewAuthHandler(register *auth.RegisterUserUseCase, checkEmail *auth.CheckEmailUseCase) *AuthHandler {
+func NewAuthHandler(register *auth.RegisterUserUseCase, checkEmail *auth.CheckEmailUseCase, verifyEmail *auth.VerifyEmailUseCase) *AuthHandler {
     return &AuthHandler{
         registerUC:   register,
         checkEmailUC: checkEmail,
+		verifyEmailUC: verifyEmail,
     }
 }
 
@@ -63,4 +65,25 @@ func (h *AuthHandler) CheckEmail(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"exists": false, "message": "Email available"})
+}
+
+func (h *AuthHandler) VerifyEmail(c *gin.Context) {
+	var input dtos.VerifyEmailInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.Error(customErr.New(http.StatusBadRequest, "Invalid input data", err.Error()))
+		return
+	}
+
+	success, err := h.verifyEmailUC.Execute(input.VerificationToken, input.VerificationCode)
+	if err != nil {
+		c.Error(customErr.New(http.StatusInternalServerError, "Failed to verify email", err.Error()))
+		return
+	}
+
+	if !success {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Verification failed"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Email verified successfully"})
 }
