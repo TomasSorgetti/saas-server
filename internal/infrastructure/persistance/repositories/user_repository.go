@@ -4,130 +4,131 @@ import (
 	"database/sql"
 	"errors"
 	"luthierSaas/internal/domain/entities"
+	"time"
 
 	"github.com/go-sql-driver/mysql"
 )
 
 type MySQLUserRepository struct {
-    db *sql.DB
+	db *sql.DB
 }
 
-var ErrEmailAlreadyExists = errors.New("email allready exists")
+var ErrEmailAlreadyExists = errors.New("email already exists")
 
 func NewMySQLUserRepository(db *sql.DB) *MySQLUserRepository {
-    return &MySQLUserRepository{db: db}
+	return &MySQLUserRepository{db: db}
 }
 
-func (r *MySQLUserRepository) Save(user *entities.User) error {
-    query := `
+func (r *MySQLUserRepository) Save(user *entities.User) (int64, error) {
+	query := `
         INSERT INTO users (
             email, password, role, first_name, last_name, phone, address, country,
-            workshop_name, is_active, deleted, last_login, subscription_plan,
-            subscription_status, reset_password_token, reset_password_expires
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            workshop_name, is_active, deleted, last_login
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `
-    _, err := r.db.Exec(query,
-        user.Email, user.Password, user.Role, user.FirstName, user.LastName,
-        user.Phone, user.Address, user.Country, user.WorkshopName, user.IsActive,
-        user.Deleted, sql.NullString{String: user.LastLogin, Valid: user.LastLogin != ""},
-        user.SubscriptionPlan, user.SubscriptionStatus,
-        sql.NullString{String: user.ResetPasswordToken, Valid: user.ResetPasswordToken != ""},
-        sql.NullString{String: user.ResetPasswordExpires, Valid: user.ResetPasswordExpires != ""},
-    )
+	res, err := r.db.Exec(query,
+		user.Email, user.Password, user.Role, user.FirstName, user.LastName,
+		user.Phone, user.Address, user.Country, user.WorkshopName, user.IsActive,
+		user.Deleted, sql.NullString{String: user.LastLogin, Valid: user.LastLogin != ""},
+	)
 
-    if err != nil {
+	if err != nil {
 		if mysqlErr, ok := err.(*mysql.MySQLError); ok && mysqlErr.Number == 1062 {
-			return ErrEmailAlreadyExists
+			return 0, ErrEmailAlreadyExists
 		}
-		return err
+		return 0, err
 	}
 
-	return nil
+	id, err := res.LastInsertId()
+	if err != nil {
+		return 0, err
+	}
+
+	return id, nil
+}
+
+func (r *MySQLUserRepository) CreateEmailVerification(userID int64, code string, expiresAt time.Time) error {
+	query := `
+        INSERT INTO email_verifications (user_id, verification_code, expires_at)
+        VALUES (?, ?, ?)
+    `
+	_, err := r.db.Exec(query, userID, code, expiresAt)
+	return err
 }
 
 func (r *MySQLUserRepository) FindByID(id int64) (*entities.User, error) {
-    query := `
+	query := `
         SELECT id, email, password, role, first_name, last_name, phone, address, country,
-               workshop_name, is_active, deleted, last_login, subscription_plan,
-               subscription_status, reset_password_token, reset_password_expires
+               workshop_name, is_active, deleted, last_login
         FROM users WHERE id = ?
     `
-    var user entities.User
-    var lastLogin, resetPasswordToken, resetPasswordExpires sql.NullString
-    err := r.db.QueryRow(query, id).Scan(
-        &user.ID, &user.Email, &user.Password, &user.Role, &user.FirstName, &user.LastName,
-        &user.Phone, &user.Address, &user.Country, &user.WorkshopName, &user.IsActive,
-        &user.Deleted, &lastLogin, &user.SubscriptionPlan, &user.SubscriptionStatus,
-        &resetPasswordToken, &resetPasswordExpires,
-    )
-    if err == sql.ErrNoRows {
-        return nil, nil 
-    }
-    if err != nil {
-        return nil, err
-    }
-    user.LastLogin = lastLogin.String
-    user.ResetPasswordToken = resetPasswordToken.String
-    user.ResetPasswordExpires = resetPasswordExpires.String
-    return &user, nil
+	var user entities.User
+	var lastLogin sql.NullString
+
+	err := r.db.QueryRow(query, id).Scan(
+		&user.ID, &user.Email, &user.Password, &user.Role, &user.FirstName, &user.LastName,
+		&user.Phone, &user.Address, &user.Country, &user.WorkshopName, &user.IsActive,
+		&user.Deleted, &lastLogin,
+	)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	user.LastLogin = lastLogin.String
+	return &user, nil
 }
 
 func (r *MySQLUserRepository) FindByEmail(email string) (*entities.User, error) {
-    query := `
+	query := `
         SELECT id, email, password, role, first_name, last_name, phone, address, country,
-               workshop_name, is_active, deleted, last_login, subscription_plan,
-               subscription_status, reset_password_token, reset_password_expires
+               workshop_name, is_active, deleted, last_login
         FROM users WHERE email = ?
     `
-    var user entities.User
-    var lastLogin, resetPasswordToken, resetPasswordExpires sql.NullString
-    err := r.db.QueryRow(query, email).Scan(
-        &user.ID, &user.Email, &user.Password, &user.Role, &user.FirstName, &user.LastName,
-        &user.Phone, &user.Address, &user.Country, &user.WorkshopName, &user.IsActive,
-        &user.Deleted, &lastLogin, &user.SubscriptionPlan, &user.SubscriptionStatus,
-        &resetPasswordToken, &resetPasswordExpires,
-    )
-    if err == sql.ErrNoRows {
-        return nil, nil
-    }
-    if err != nil {
-        return nil, err
-    }
-    user.LastLogin = lastLogin.String
-    user.ResetPasswordToken = resetPasswordToken.String
-    user.ResetPasswordExpires = resetPasswordExpires.String
-    return &user, nil
+	var user entities.User
+	var lastLogin sql.NullString
+
+	err := r.db.QueryRow(query, email).Scan(
+		&user.ID, &user.Email, &user.Password, &user.Role, &user.FirstName, &user.LastName,
+		&user.Phone, &user.Address, &user.Country, &user.WorkshopName, &user.IsActive,
+		&user.Deleted, &lastLogin,
+	)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	user.LastLogin = lastLogin.String
+	return &user, nil
 }
 
 func (r *MySQLUserRepository) FindAll() ([]*entities.User, error) {
-    query := `
+	query := `
         SELECT id, email, password, role, first_name, last_name, phone, address, country,
-               workshop_name, is_active, deleted, last_login, subscription_plan,
-               subscription_status, reset_password_token, reset_password_expires
+               workshop_name, is_active, deleted, last_login
         FROM users
     `
-    rows, err := r.db.Query(query)
-    if err != nil {
-        return nil, err
-    }
-    defer rows.Close()
+	rows, err := r.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
 
-    var users []*entities.User
-    for rows.Next() {
-        var user entities.User
-        var lastLogin, resetPasswordToken, resetPasswordExpires sql.NullString
-        if err := rows.Scan(
-            &user.ID, &user.Email, &user.Password, &user.Role, &user.FirstName, &user.LastName,
-            &user.Phone, &user.Address, &user.Country, &user.WorkshopName, &user.IsActive,
-            &user.Deleted, &lastLogin, &user.SubscriptionPlan, &user.SubscriptionStatus,
-            &resetPasswordToken, &resetPasswordExpires,
-        ); err != nil {
-            return nil, err
-        }
-        user.LastLogin = lastLogin.String
-        user.ResetPasswordToken = resetPasswordToken.String
-        user.ResetPasswordExpires = resetPasswordExpires.String
-        users = append(users, &user)
-    }
-    return users, nil
+	var users []*entities.User
+	for rows.Next() {
+		var user entities.User
+		var lastLogin sql.NullString
+		if err := rows.Scan(
+			&user.ID, &user.Email, &user.Password, &user.Role, &user.FirstName, &user.LastName,
+			&user.Phone, &user.Address, &user.Country, &user.WorkshopName, &user.IsActive,
+			&user.Deleted, &lastLogin,
+		); err != nil {
+			return nil, err
+		}
+		user.LastLogin = lastLogin.String
+		users = append(users, &user)
+	}
+	return users, nil
 }

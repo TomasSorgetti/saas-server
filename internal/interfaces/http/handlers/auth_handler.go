@@ -1,11 +1,9 @@
 package handlers
 
 import (
-	"errors"
 	"net/http"
 
 	"luthierSaas/internal/application/usecases/auth"
-	"luthierSaas/internal/infrastructure/persistance/repositories"
 	"luthierSaas/internal/interfaces/http/dtos"
 
 	customErr "luthierSaas/internal/interfaces/http/errors"
@@ -32,24 +30,18 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 func (h *AuthHandler) Register(c *gin.Context) {
 	var input dtos.RegisterInput
-
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.Error(customErr.New(http.StatusBadRequest, "Invalid input data", err.Error()))
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Datos inválidos"})
 		return
 	}
 
-	err := h.registerUC.Execute(input)
+	result, err := h.registerUC.Execute(input)
 	if err != nil {
-		switch {
-		case errors.Is(err, repositories.ErrEmailAlreadyExists):
-			c.Error(customErr.New(http.StatusConflict, "Email already registered"))
-		default:
-			c.Error(customErr.New(http.StatusInternalServerError, "Failed to register user", err.Error()))
-		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "No se pudo registrar el usuario"})
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"message": "User registered successfully"})
+	c.JSON(http.StatusCreated, result)
 }
 
 func (h *AuthHandler) CheckEmail(c *gin.Context) {

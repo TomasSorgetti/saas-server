@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"luthierSaas/internal/di"
 	"luthierSaas/internal/infrastructure/config"
@@ -27,8 +28,11 @@ func main() {
     defer db.Close()
     
     // dependency injection
-    container := di.NewContainer(db.DB)
+    container, emailService := di.NewContainer(db.DB)
 
+    // Iniciar el worker para procesar la cola de correos
+	go emailService.StartWorker(context.Background())
+    
     // router
     r := gin.Default()
     r.SetTrustedProxies([]string{"127.0.0.1"})

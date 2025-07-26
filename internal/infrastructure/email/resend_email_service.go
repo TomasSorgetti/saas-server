@@ -1,11 +1,12 @@
 package email
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 
 	"luthierSaas/internal/infrastructure/queue"
@@ -65,19 +66,38 @@ func (es *EmailService) StartWorker(ctx context.Context) {
     }
 }
 
-// Función que usa la API de Resend para mandar email
 func (es *EmailService) sendEmail(job EmailJob) error {
-    // Ejemplo simplificado con un request HTTP (usá tu cliente HTTP preferido)
+	payload := map[string]interface{}{
+		"from":    "Luthier SaaS <noreply@tomassorgetti.com.ar>",
+		"to":      []string{job.To},
+		"subject": job.Subject,
+		"html":    job.Body,
+	}
 
-    if es.apiKey == "" {
-        return errors.New("API Key is not set")
-    }
+	payloadBytes, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
 
-    // Aquí iría la lógica real para llamar a la API de Resend
-    // Por ejemplo, un POST a https://api.resend.com/emails con job.To, job.Subject y job.Body
+	req, err := http.NewRequest("POST", "https://api.resend.com/emails", bytes.NewBuffer(payloadBytes))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Authorization", "Bearer "+es.apiKey)
+	req.Header.Set("Content-Type", "application/json")
 
-    fmt.Printf("Sending email to %s with subject %s\n", job.To, job.Subject)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
 
-    // Simulamos éxito
-    return nil
+	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+		log.Printf("Email sent to %s", job.To)
+		return nil
+	}
+
+	var bodyBytes bytes.Buffer
+	bodyBytes.ReadFrom(resp.Body)
+	return fmt.Errorf("failed to send email: %s", bodyBytes.String())
 }

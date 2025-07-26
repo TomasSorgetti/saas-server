@@ -16,19 +16,19 @@ type Container struct {
 	UserHandler *handlers.UserHandler
 }
 
-func NewContainer(db *sql.DB) *Container {
+func NewContainer(db *sql.DB) (*Container, *email.EmailService) {
 	// Repositorios
 	userRepo := repositories.NewMySQLUserRepository(db)
 
-	// Cliente Redis
+	// Client Redis
 	redisClient := redis.NewClient(&redis.Options{
-		Addr: "redis:6379", // Cambiar si es otro host/puerto
+		Addr: "redis:6379",
 	})
 
-	// Cola para emails
+	// Email Queue
 	emailQueue := queue.NewQueue(redisClient, "email_queue")
 
-	// Servicio de Email
+	// Email Service
 	emailService := email.NewEmailService(emailQueue)
 
 	// Use cases
@@ -39,5 +39,5 @@ func NewContainer(db *sql.DB) *Container {
 
 	return &Container{
 		AuthHandler: authHandler,
-	}
+	}, emailService
 }
