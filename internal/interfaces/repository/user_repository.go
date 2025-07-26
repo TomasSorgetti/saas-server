@@ -11,4 +11,5 @@ type UserRepository interface {
     FindByID(id int64) (*entities.User, error)
     FindByEmail(email string) (*entities.User, error)
     FindAll() ([]*entities.User, error)
+    UpdateEmailVerified(userID int64, verified bool) error
 }

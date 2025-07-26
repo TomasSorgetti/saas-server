@@ -56,6 +56,15 @@ func (r *UserRepository) CreateEmailVerification(userID int64, code string, expi
 	return err
 }
 
+func (r *UserRepository) UpdateEmailVerified(userID int64, verified bool) error {
+	query := `
+        UPDATE users SET verified = ? WHERE id = ?
+    `
+	_, err := r.db.Exec(query, verified, userID)
+	
+	return err
+}
+
 func (r *UserRepository) FindByID(id int64) (*entities.User, error) {
 	query := `
         SELECT id, email, password, role, first_name, last_name, phone, address, country,

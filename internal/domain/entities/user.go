@@ -14,4 +14,5 @@ type User struct {
 	IsActive     bool
 	Deleted      bool
 	LastLogin    string
+	Verified     bool
 }

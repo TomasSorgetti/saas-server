@@ -45,6 +45,11 @@ func (uc *VerifyEmailUseCase) Execute(verificationToken string, verificationCode
 	if err != nil {
 		return false, err
 	}
+	
+	err = uc.userRepo.UpdateEmailVerified(userId, true)
+	if err != nil {
+		return false, err
+	}
 
 	return true, nil
 }
