@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"context"
 	"errors"
 	"luthierSaas/internal/infrastructure/security"
 	"luthierSaas/internal/interfaces/http/dtos"
@@ -31,6 +30,12 @@ func (uc *LoginUseCase) Execute(input dtos.LoginInput) (*dtos.LoginResponse, err
 		return nil, errors.New("user not found")
 	}
 
+	// NOT IMPLEMENTED: Login method handling
+	loginMethod := "password"
+	if (loginMethod != "password") {
+		return nil, errors.New("invalid login method")
+	}
+
 	if user.Deleted {
 		return nil, errors.New("account deleted")
 	}	
@@ -39,12 +44,7 @@ func (uc *LoginUseCase) Execute(input dtos.LoginInput) (*dtos.LoginResponse, err
 		return nil, errors.New("invalid credentials")
 	}
 
-	// NOT IMPLEMENTED: Agregar a la tabla users una propiedad verified para evitar un llamado extra a la base de datos
-	emailVerification, err := uc.emailVerificationRepo.GetByUserID(context.Background(), user.ID)
-	if err != nil {
-		return nil, err
-	}
-	if emailVerification == nil || !emailVerification.Verified {
+	if !user.Verified {
 		return nil, errors.New("email not verified")
 	}
 

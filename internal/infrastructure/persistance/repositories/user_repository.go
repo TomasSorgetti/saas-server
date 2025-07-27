@@ -92,7 +92,7 @@ func (r *UserRepository) FindByID(id int64) (*entities.User, error) {
 func (r *UserRepository) FindByEmail(email string) (*entities.User, error) {
 	query := `
         SELECT id, email, password, role, first_name, last_name, phone, address, country,
-               workshop_name, is_active, deleted, last_login
+               workshop_name, is_active, deleted, last_login, verified
         FROM users WHERE email = ?
     `
 	var user entities.User
@@ -101,7 +101,7 @@ func (r *UserRepository) FindByEmail(email string) (*entities.User, error) {
 	err := r.db.QueryRow(query, email).Scan(
 		&user.ID, &user.Email, &user.Password, &user.Role, &user.FirstName, &user.LastName,
 		&user.Phone, &user.Address, &user.Country, &user.WorkshopName, &user.IsActive,
-		&user.Deleted, &lastLogin,
+		&user.Deleted, &lastLogin, &user.Verified,
 	)
 	if err == sql.ErrNoRows {
 		return nil, nil

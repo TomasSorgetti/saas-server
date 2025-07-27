@@ -43,19 +43,28 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, result)
+	// set domain to cookie with secure and httpOnly flags
+	// c.SetCookie("access_token", result.AccessToken, 3600, "/", "", true, true) 
+	c.SetCookie("access_token", result.AccessToken, 3600, "/", "", true, true) 
+	c.SetCookie("refresh_token", result.RefreshToken, 604800, "/", "", true, true) 
+
+	c.JSON(http.StatusOK, gin.H{
+		"user_id":       result.UserID,
+		"email":        result.Email,
+		"role":         result.Role,
+	})
 }
 
 func (h *AuthHandler) Register(c *gin.Context) {
 	var input dtos.RegisterInput
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Datos inválidos"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input data"})
 		return
 	}
 
 	result, err := h.registerUC.Execute(input)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "No se pudo registrar el usuario"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not register user"})
 		return
 	}
 

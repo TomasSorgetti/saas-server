@@ -43,6 +43,7 @@ func (uc *RegisterUserUseCase) Execute(input dtos.RegisterInput) (*dtos.Register
 		IsActive:     true,
 		Deleted:      false,
 		LastLogin:    "",
+		Verified:     false,
 	}
 
 	userID, err := uc.userRepo.Save(user)
