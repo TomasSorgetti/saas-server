@@ -8,8 +8,8 @@ import (
 
 type EmailVerificationRepository interface {
 	Create(ctx context.Context, ev *entities.EmailVerification) error
-	GetByUserID(ctx context.Context, userID int64) (*entities.EmailVerification, error)
-	MarkAsVerified(ctx context.Context, userID int64) error
-	DeleteByUserID(ctx context.Context, userID int64) error
-	UpdateCode(ctx context.Context, id int64, newCode string) error
+	GetByUserID(ctx context.Context, userID int) (*entities.EmailVerification, error)
+	MarkAsVerified(ctx context.Context, userID int) error
+	DeleteByUserID(ctx context.Context, userID int) error
+	UpdateCode(ctx context.Context, id int, newCode string) error
 }

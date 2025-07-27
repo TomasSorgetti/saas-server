@@ -1,51 +1,39 @@
 package handlers
 
 import (
+	"luthierSaas/internal/application/usecases/user"
+	customErr "luthierSaas/internal/interfaces/http/errors"
 	"net/http"
-
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
 
 type UserHandler struct {
+	profileUC   *user.ProfileUseCase
 }
 
-func NewUserHandler() *UserHandler {
-    return &UserHandler{}
+func NewUserHandler(profile *user.ProfileUseCase) *UserHandler {
+    return &UserHandler{
+		profileUC:          profile,
+	}
 }
 
-func (h *UserHandler) Create(c *gin.Context) {
-	c.JSON(http.StatusOK, "User created")
-}
+func (h *UserHandler) GetProfile(c *gin.Context) {
+	userIDStr := c.Param("user_id")
 
-func (h *UserHandler) GetAll(c *gin.Context) {
-	c.JSON(http.StatusOK, "All users")
-}
+	userID, err := strconv.Atoi(userIDStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+			return
+		}
 
-func (h *UserHandler) GetByID(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
+	result, err := h.profileUC.Execute(userID)
+
 	if err != nil {
-		c.JSON(http.StatusBadRequest, "Invalid id")
+		c.Error(customErr.New(http.StatusBadRequest, "Invalid input data", err.Error()))
 		return
 	}
-	c.JSON(http.StatusOK, "User by id" + strconv.Itoa(id))
-}
 
-func (h *UserHandler) Update(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, "Invalid id")
-		return
-	}
-	c.JSON(http.StatusOK, "User updated" + strconv.Itoa(id))
-}
-
-func (h *UserHandler) Delete(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, "Invalid id")
-		return
-	}
-	c.JSON(http.StatusOK, "User deleted" + strconv.Itoa(id))
+	c.JSON(http.StatusFound, result)
 }

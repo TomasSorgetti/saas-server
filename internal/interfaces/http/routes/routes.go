@@ -17,4 +17,7 @@ func SetupRoutes(r *gin.Engine, db *sql.DB, container *di.Container) {
 	})
     // auth routes
     SetupAuthRoutes(api, container.AuthHandler)
+
+	// user routes
+    SetupUserRoutes(api, container.UserHandler)
 }

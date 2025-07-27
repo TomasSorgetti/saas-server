@@ -3,8 +3,8 @@ package entities
 import "time"
 
 type EmailVerification struct {
-	ID        int64
-	UserID    int64
+	ID        int
+	UserID    int
 	Code      string
 	ExpiresAt time.Time
 	Verified  bool

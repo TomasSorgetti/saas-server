@@ -24,7 +24,7 @@ func (r *emailVerificationRepository) Create(ctx context.Context, ev *entities.E
 	return err
 }
 
-func (r *emailVerificationRepository) GetByUserID(ctx context.Context, userID int64) (*entities.EmailVerification, error) {
+func (r *emailVerificationRepository) GetByUserID(ctx context.Context, userID int) (*entities.EmailVerification, error) {
 	query := `SELECT id, user_id, verification_code, expires_at, verified, created_at, updated_at
 			  FROM email_verifications WHERE user_id = ?`
 	row := r.db.QueryRowContext(ctx, query, userID)
@@ -47,19 +47,19 @@ func (r *emailVerificationRepository) GetByUserID(ctx context.Context, userID in
 	return &ev, err
 }
 
-func (r *emailVerificationRepository) MarkAsVerified(ctx context.Context, userID int64) error {
+func (r *emailVerificationRepository) MarkAsVerified(ctx context.Context, userID int) error {
 	query := `UPDATE email_verifications SET verified = TRUE WHERE user_id = ?`
 	_, err := r.db.ExecContext(ctx, query, userID)
 	return err
 }
 
-func (r *emailVerificationRepository) DeleteByUserID(ctx context.Context, userID int64) error {
+func (r *emailVerificationRepository) DeleteByUserID(ctx context.Context, userID int) error {
 	query := `DELETE FROM email_verifications WHERE user_id = ?`
 	_, err := r.db.ExecContext(ctx, query, userID)
 	return err
 }
 
-func (r *emailVerificationRepository) UpdateCode(ctx context.Context, id int64, newCode string) error {
+func (r *emailVerificationRepository) UpdateCode(ctx context.Context, id int, newCode string) error {
 	query := `UPDATE email_verifications SET verification_code = ? WHERE id = ?`
 	_, err := r.db.ExecContext(ctx, query, newCode, id)
 	return err

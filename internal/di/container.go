@@ -2,7 +2,8 @@ package di
 
 import (
 	"database/sql"
-	authUC "luthierSaas/internal/application/usecases/auth"
+	authUseCases "luthierSaas/internal/application/usecases/auth"
+	userUseCases "luthierSaas/internal/application/usecases/user"
 	"luthierSaas/internal/infrastructure/cache"
 	"luthierSaas/internal/infrastructure/email"
 	"luthierSaas/internal/infrastructure/persistance/repositories"
@@ -37,17 +38,17 @@ func NewContainer(db *sql.DB) (*Container, *email.EmailService) {
 	// Cache Service
 	cacheService := cache.NewCache(redisClient)
 
-	// remove print
-	print(cacheService)
-
 	// Use cases
-	authUC := authUC.NewAuthUseCases(userRepo, emailVerificationRepo, emailService)
+	authUC := authUseCases.NewAuthUseCases(userRepo, emailVerificationRepo, emailService)
+	userUC := userUseCases.NewUserUseCases(userRepo, cacheService)
 
 	// Handlers
 	authHandler := handlers.NewAuthHandler( authUC.Login, authUC.Register, authUC.CheckEmail, authUC.VerifyEmail, authUC.ResendVerificationCode)
+	userHandler := handlers.NewUserHandler(userUC.Profile)
 
 	return &Container{
 		AuthHandler: authHandler,
+		UserHandler: userHandler,
 		RedisClient: redisClient,
 	}, emailService
 }

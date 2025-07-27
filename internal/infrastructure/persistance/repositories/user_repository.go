@@ -19,7 +19,7 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 	return &UserRepository{db: db}
 }
 
-func (r *UserRepository) Save(user *entities.User) (int64, error) {
+func (r *UserRepository) Save(user *entities.User) (int, error) {
 	query := `
         INSERT INTO users (
             email, password, role, first_name, last_name, phone, address, country,
@@ -44,10 +44,10 @@ func (r *UserRepository) Save(user *entities.User) (int64, error) {
 		return 0, err
 	}
 
-	return id, nil
+	return int(id), nil
 }
 
-func (r *UserRepository) CreateEmailVerification(userID int64, code string, expiresAt time.Time) error {
+func (r *UserRepository) CreateEmailVerification(userID int, code string, expiresAt time.Time) error {
 	query := `
         INSERT INTO email_verifications (user_id, verification_code, expires_at)
         VALUES (?, ?, ?)
@@ -56,7 +56,7 @@ func (r *UserRepository) CreateEmailVerification(userID int64, code string, expi
 	return err
 }
 
-func (r *UserRepository) UpdateEmailVerified(userID int64, verified bool) error {
+func (r *UserRepository) UpdateEmailVerified(userID int, verified bool) error {
 	query := `
         UPDATE users SET verified = ? WHERE id = ?
     `
@@ -65,7 +65,7 @@ func (r *UserRepository) UpdateEmailVerified(userID int64, verified bool) error 
 	return err
 }
 
-func (r *UserRepository) FindByID(id int64) (*entities.User, error) {
+func (r *UserRepository) FindByID(id int) (*entities.User, error) {
 	query := `
         SELECT id, email, password, role, first_name, last_name, phone, address, country,
                workshop_name, is_active, deleted, last_login

@@ -6,10 +6,10 @@ import (
 )
 
 type UserRepository interface {
-    Save(user *entities.User) (int64, error)
-    CreateEmailVerification(userID int64, code string, expiresAt time.Time) error
-    FindByID(id int64) (*entities.User, error)
+    Save(user *entities.User) (int, error)
+    CreateEmailVerification(userID int, code string, expiresAt time.Time) error
+    FindByID(id int) (*entities.User, error)
     FindByEmail(email string) (*entities.User, error)
     FindAll() ([]*entities.User, error)
-    UpdateEmailVerified(userID int64, verified bool) error
+    UpdateEmailVerified(userID int, verified bool) error
 }
