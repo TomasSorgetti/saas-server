@@ -3,6 +3,7 @@ package repositories
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"luthierSaas/internal/domain/entities"
 	"time"
 
@@ -68,37 +69,13 @@ func (r *UserRepository) UpdateEmailVerified(userID int, verified bool) error {
 func (r *UserRepository) FindByID(id int) (*entities.User, error) {
 	query := `
         SELECT id, email, password, role, first_name, last_name, phone, address, country,
-               workshop_name, is_active, deleted, last_login
+               workshop_name, is_active, deleted, last_login, verified
         FROM users WHERE id = ?
     `
 	var user entities.User
 	var lastLogin sql.NullString
 
 	err := r.db.QueryRow(query, id).Scan(
-		&user.ID, &user.Email, &user.Password, &user.Role, &user.FirstName, &user.LastName,
-		&user.Phone, &user.Address, &user.Country, &user.WorkshopName, &user.IsActive,
-		&user.Deleted, &lastLogin,
-	)
-	if err == sql.ErrNoRows {
-		return nil, nil
-	}
-	if err != nil {
-		return nil, err
-	}
-	user.LastLogin = lastLogin.String
-	return &user, nil
-}
-
-func (r *UserRepository) FindByEmail(email string) (*entities.User, error) {
-	query := `
-        SELECT id, email, password, role, first_name, last_name, phone, address, country,
-               workshop_name, is_active, deleted, last_login, verified
-        FROM users WHERE email = ?
-    `
-	var user entities.User
-	var lastLogin sql.NullString
-
-	err := r.db.QueryRow(query, email).Scan(
 		&user.ID, &user.Email, &user.Password, &user.Role, &user.FirstName, &user.LastName,
 		&user.Phone, &user.Address, &user.Country, &user.WorkshopName, &user.IsActive,
 		&user.Deleted, &lastLogin, &user.Verified,
@@ -113,10 +90,30 @@ func (r *UserRepository) FindByEmail(email string) (*entities.User, error) {
 	return &user, nil
 }
 
+func (r *UserRepository) FindByEmail(email string) (*entities.User, error) {
+    query := "SELECT id, email, password, role, first_name, last_name, phone, address, country, workshop_name, is_active, deleted, last_login, verified FROM users WHERE email = ?"
+    var user entities.User
+    var lastLogin sql.NullString
+
+    err := r.db.QueryRow(query, email).Scan(
+        &user.ID, &user.Email, &user.Password, &user.Role, &user.FirstName, &user.LastName,
+        &user.Phone, &user.Address, &user.Country, &user.WorkshopName, &user.IsActive,
+        &user.Deleted, &lastLogin, &user.Verified,
+    )
+    if err == sql.ErrNoRows {
+        return nil, nil
+    }
+    if err != nil {
+        return nil, fmt.Errorf("failed to query user by email %q: %w", email, err)
+    }
+    user.LastLogin = lastLogin.String
+    return &user, nil
+}
+
 func (r *UserRepository) FindAll() ([]*entities.User, error) {
 	query := `
         SELECT id, email, password, role, first_name, last_name, phone, address, country,
-               workshop_name, is_active, deleted, last_login
+               workshop_name, is_active, deleted, last_login, verified
         FROM users
     `
 	rows, err := r.db.Query(query)
@@ -132,7 +129,7 @@ func (r *UserRepository) FindAll() ([]*entities.User, error) {
 		if err := rows.Scan(
 			&user.ID, &user.Email, &user.Password, &user.Role, &user.FirstName, &user.LastName,
 			&user.Phone, &user.Address, &user.Country, &user.WorkshopName, &user.IsActive,
-			&user.Deleted, &lastLogin,
+			&user.Deleted, &lastLogin, &user.Verified,
 		); err != nil {
 			return nil, err
 		}

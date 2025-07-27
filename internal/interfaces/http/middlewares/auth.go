@@ -1,33 +1,30 @@
 package middlewares
 
 import (
-	"context"
 	"luthierSaas/internal/infrastructure/security"
 	"net/http"
-	"strings"
+
+	"github.com/gin-gonic/gin"
 )
 
-type contextKey string
+const UserIDKey = "userID"
 
-const UserIDKey contextKey = "user_id"
+func AuthMiddleware() gin.HandlerFunc {
+    return func(c *gin.Context) {
+        cookie, err := c.Cookie("access_token") 
+        if err != nil {
+            c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Missing or invalid cookie"})
+            return
+        }
 
-func AuthMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		cookie, err := r.Cookie("access_token")
-		if err != nil || cookie.Value == "" {
-			http.Error(w, "Acceso no autorizado (token faltante)", http.StatusUnauthorized)
-			return
-		}
+        // Validar el token almacenado en la cookie
+        userID, err := security.ValidateAccessToken(cookie)
+        if err != nil {
+            c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+            return
+        }
 
-		token := strings.TrimSpace(cookie.Value)
-
-		userID, err := security.ValidateAccessToken(token)
-		if err != nil {
-			http.Error(w, "Token inválido o expirado", http.StatusUnauthorized)
-			return
-		}
-
-		ctx := context.WithValue(r.Context(), UserIDKey, userID)
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
+        c.Set(UserIDKey, userID)
+        c.Next()
+    }
 }

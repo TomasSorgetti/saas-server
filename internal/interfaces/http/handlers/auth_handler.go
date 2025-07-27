@@ -45,8 +45,8 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 	// set domain to cookie with secure and httpOnly flags
 	// c.SetCookie("access_token", result.AccessToken, 3600, "/", "", true, true) 
-	c.SetCookie("access_token", result.AccessToken, 3600, "/", "", true, true) 
-	c.SetCookie("refresh_token", result.RefreshToken, 604800, "/", "", true, true) 
+	c.SetCookie("access_token", result.AccessToken, 3600, "/", "", false, true) 
+	c.SetCookie("refresh_token", result.RefreshToken, 604800, "/", "", false, true) 
 
 	c.JSON(http.StatusOK, gin.H{
 		"user_id":       result.UserID,
