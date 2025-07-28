@@ -8,7 +8,7 @@ import (
 )
 
 func SetupRoutes(r *gin.Engine, db *sql.DB, container *di.Container) {
-    api := r.Group("/api/v1")
+    api := r.Group("/v1")
 
 	api.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{

@@ -20,24 +20,23 @@ func NewUserHandler(profile *user.ProfileUseCase) *UserHandler {
 }
 
 func (h *UserHandler) GetProfile(c *gin.Context) {
-	userIDVal, exists := c.Get(middlewares.UserIDKey)
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-		return
-	}
+    userIDVal, exists := c.Get(middlewares.UserIDKey)
+    if !exists {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+        return
+    }
 
-	userID, ok := userIDVal.(int)
-	if !ok {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID type"})
-		return
-	}
-	
-	result, err := h.profileUC.Execute(userID)
+    userID, ok := userIDVal.(int)
+    if !ok {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID type"})
+        return
+    }
+    
+    result, err := h.profileUC.Execute(userID)
+    if err != nil {
+        c.Error(customErr.New(http.StatusBadRequest, "Error to get profile", err.Error()))
+        return
+    }
 
-	if err != nil {
-		c.Error(customErr.New(http.StatusBadRequest, "Error to get profile", err.Error()))
-		return
-	}
-
-	c.JSON(http.StatusFound, result)
+    c.JSON(http.StatusOK, result)
 }

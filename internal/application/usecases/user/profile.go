@@ -2,7 +2,6 @@ package user
 
 import (
 	"errors"
-	"fmt"
 	"luthierSaas/internal/infrastructure/cache"
 	"luthierSaas/internal/interfaces/http/dtos"
 	"luthierSaas/internal/interfaces/repository"
@@ -29,7 +28,7 @@ func (uc *ProfileUseCase) Execute(userID int) (*dtos.ProfileResponse, error) {
     }
 
    if !user.Verified {
-    return nil, fmt.Errorf("user not verified: %v", user.Verified)
+    return nil, errors.New("user not verified")
 }
 	
 	profile := &dtos.ProfileResponse{
