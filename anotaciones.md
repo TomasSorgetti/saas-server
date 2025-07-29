@@ -10,7 +10,7 @@ migrate create -ext sql -dir migrations -seq create_users_table
 
 ### Apply Migration
 
-migrate -source file://migrations -database "mysql://root:@tcp(localhost:3306)/luthier_saas_db" up
+migrate -source /app/migrations -database "mysql://root:@tcp(localhost:3306)/luthier_saas_db" up
 
 ## Docker
 

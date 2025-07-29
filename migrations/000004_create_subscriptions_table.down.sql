@@ -1,0 +1,1 @@
+DELETE FROM subscription_plans WHERE name IN ('Free Tier', 'Basic', 'Premium');
