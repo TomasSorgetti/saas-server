@@ -58,10 +58,19 @@ func (uc *LoginUseCase) Execute(input dtos.LoginInput) (*dtos.LoginResponse, err
 		return nil, err
 	}
 
+	profile := &dtos.ProfileResponse{
+        ID:           user.ID,
+        Email:        user.Email,
+        FirstName:    user.FirstName,
+        LastName:     user.LastName,
+        Phone:        user.Phone,
+        Country:      user.Country,
+        WorkshopName: user.WorkshopName,
+        LastLogin:    user.LastLogin,
+    }
+
 	return &dtos.LoginResponse{
-		UserID:       user.ID,
-		Email:        user.Email,
-		Role:         user.Role,
+		Profile: profile,
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 	}, nil

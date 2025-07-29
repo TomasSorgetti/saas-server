@@ -51,11 +51,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	c.SetCookie("access_token", result.AccessToken, 3600, "/", "", false, true) 
 	c.SetCookie("refresh_token", result.RefreshToken, 604800, "/", "", false, true) 
 
-	c.JSON(http.StatusOK, gin.H{
-		"user_id":       result.UserID,
-		"email":        result.Email,
-		"role":         result.Role,
-	})
+	c.JSON(http.StatusOK, result.Profile)
 }
 
 func (h *AuthHandler) Register(c *gin.Context) {
