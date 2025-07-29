@@ -158,3 +158,10 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 	
 	c.JSON(http.StatusOK, result.Profile)
 }
+
+func (h *AuthHandler) Logout(c *gin.Context) {
+	c.SetCookie("access_token", "", -1, "/", "", false, true)
+	c.SetCookie("refresh_token", "", -1, "/", "", false, true)
+
+	c.JSON(http.StatusOK, gin.H{"message": "Session logout success"})
+}
