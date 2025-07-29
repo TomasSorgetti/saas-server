@@ -58,9 +58,6 @@ func (uc *LoginUseCase) Execute(input dtos.LoginInput) (*dtos.LoginResponse, err
 		return nil, err
 	}
 
-	// debug user
-	println("USER: ", user)
-
 	profile := &dtos.ProfileResponse{
         ID:           user.ID,
         Email:        user.Email,

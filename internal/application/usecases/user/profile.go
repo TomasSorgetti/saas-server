@@ -55,6 +55,7 @@ func (uc *ProfileUseCase) Execute(userID int) (*dtos.ProfileResponse, error) {
 		Country:      user.Country,
 		WorkshopName: user.WorkshopName,
 		LastLogin:    user.LastLogin,
+		Subscription: user.Subscription,
 	}
 
 	profileJSON, err := json.Marshal(profile)
