@@ -17,7 +17,7 @@ func RefreshMiddleware() gin.HandlerFunc {
             return
         }
 
-        userID, err := security.ValidateAccessToken(cookie)
+        userID, err := security.ValidateRefreshToken(cookie)
 
         if err != nil {
             c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
