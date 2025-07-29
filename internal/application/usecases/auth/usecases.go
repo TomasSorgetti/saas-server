@@ -21,6 +21,6 @@ func NewAuthUseCases(userRepo repository.UserRepository, emailVerificationRepo r
         CheckEmail: NewCheckEmailUseCase(userRepo),
         VerifyEmail: NewVerifyEmailUseCase(userRepo, emailVerificationRepo),
         ResendVerificationCode: NewResendVerificationCodeUseCase(userRepo, emailVerificationRepo, emailService),
-        RefreshToken: NewRefreshTokenUseCase(),
+        RefreshToken: NewRefreshTokenUseCase(userRepo),
     }
 }
