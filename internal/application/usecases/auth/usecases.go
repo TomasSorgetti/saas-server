@@ -14,10 +14,10 @@ type AuthUseCases struct {
     RefreshToken *RefreshTokenUseCase
 }
 
-func NewAuthUseCases(userRepo repository.UserRepository, emailVerificationRepo repository.EmailVerificationRepository, emailService *email.EmailService) *AuthUseCases{
+func NewAuthUseCases(userRepo repository.UserRepository, suscriptionRepo repository.SubscriptionRepository, emailVerificationRepo repository.EmailVerificationRepository, emailService *email.EmailService) *AuthUseCases{
     return &AuthUseCases{
         Login:      NewLoginUseCase(userRepo, emailVerificationRepo),
-        Register:   NewRegisterUserUseCase(userRepo, emailService),
+        Register:   NewRegisterUserUseCase(userRepo, suscriptionRepo, emailService),
         CheckEmail: NewCheckEmailUseCase(userRepo),
         VerifyEmail: NewVerifyEmailUseCase(userRepo, emailVerificationRepo),
         ResendVerificationCode: NewResendVerificationCodeUseCase(userRepo, emailVerificationRepo, emailService),

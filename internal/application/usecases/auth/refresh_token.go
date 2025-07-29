@@ -48,6 +48,7 @@ func (uc *RefreshTokenUseCase) Execute(userID int) (*dtos.RefreshResponse, error
         Country:      user.Country,
         WorkshopName: user.WorkshopName,
         LastLogin:    user.LastLogin,
+		Subscription: user.Subscription,
     }
 
 	

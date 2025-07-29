@@ -13,13 +13,15 @@ import (
 
 type RegisterUserUseCase struct {
 	userRepo     repository.UserRepository
+	subscriptionRepo     repository.SubscriptionRepository
 	emailService *email.EmailService
 }
 
 
-func NewRegisterUserUseCase(userRepo repository.UserRepository, emailService *email.EmailService) *RegisterUserUseCase {
+func NewRegisterUserUseCase(userRepo repository.UserRepository, subscriptionRepo repository.SubscriptionRepository, emailService *email.EmailService) *RegisterUserUseCase {
 	return &RegisterUserUseCase{
 		userRepo:     userRepo,
+		subscriptionRepo: subscriptionRepo,
 		emailService: emailService,
 	}
 }
@@ -51,6 +53,25 @@ func (uc *RegisterUserUseCase) Execute(input dtos.RegisterInput) (*dtos.Register
 		return nil, err
 	}
 
+	planID, err := uc.subscriptionRepo.GetFreeTierPlanID()
+    if err != nil {
+        return nil, fmt.Errorf("failed to get Free Tier plan ID: %w", err)
+    }
+
+	now := time.Now()
+    subscription := &entities.Subscription{
+        UserID:    userID,
+        PlanID:    planID,
+        Status:    "active",
+        StartedAt: now,
+        ExpiresAt: now.Add(14 * 24 * time.Hour), // 14 days
+    }
+
+    _, err = uc.subscriptionRepo.Save(subscription)
+    if err != nil {
+        return nil, fmt.Errorf("failed to create subscription for user %d: %w", userID, err)
+    }
+	
 	code, err := security.GenerateVerificationCode(6)
 	if err != nil {
 		return nil, err

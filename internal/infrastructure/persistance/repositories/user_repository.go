@@ -67,38 +67,73 @@ func (r *UserRepository) UpdateEmailVerified(userID int, verified bool) error {
 }
 
 func (r *UserRepository) FindByID(id int) (*entities.User, error) {
-	query := `
-        SELECT id, email, password, role, first_name, last_name, phone, address, country,
-               workshop_name, is_active, deleted, last_login, verified
-        FROM users WHERE id = ?
+    query := `
+        SELECT 
+            u.id, u.email, u.password, u.role, u.first_name, u.last_name, u.phone, 
+            u.address, u.country, u.workshop_name, u.is_active, u.deleted, u.last_login, u.verified,
+            s.id, s.user_id, s.plan_id, sp.name, s.status, s.started_at, s.expires_at
+        FROM users u
+        LEFT JOIN subscriptions s ON u.id = s.user_id AND s.status = 'active'
+        LEFT JOIN subscription_plans sp ON s.plan_id = sp.id
+        WHERE u.id = ?
     `
-	var user entities.User
-	var lastLogin sql.NullString
+    var user entities.User
+    var lastLogin sql.NullString
+    var subID, subUserID, subPlanID sql.NullInt64
+    var subPlanName, subStatus sql.NullString
+    var subStartedAt, subExpiresAt sql.NullTime
 
-	err := r.db.QueryRow(query, id).Scan(
-		&user.ID, &user.Email, &user.Password, &user.Role, &user.FirstName, &user.LastName,
-		&user.Phone, &user.Address, &user.Country, &user.WorkshopName, &user.IsActive,
-		&user.Deleted, &lastLogin, &user.Verified,
-	)
-	if err == sql.ErrNoRows {
-		return nil, nil
-	}
-	if err != nil {
-		return nil, err
-	}
-	user.LastLogin = lastLogin.String
-	return &user, nil
+    err := r.db.QueryRow(query, id).Scan(
+        &user.ID, &user.Email, &user.Password, &user.Role, &user.FirstName, &user.LastName,
+        &user.Phone, &user.Address, &user.Country, &user.WorkshopName, &user.IsActive,
+        &user.Deleted, &lastLogin, &user.Verified,
+        &subID, &subUserID, &subPlanID, &subPlanName, &subStatus, &subStartedAt, &subExpiresAt,
+    )
+    if err == sql.ErrNoRows {
+        return nil, nil
+    }
+    if err != nil {
+        return nil, fmt.Errorf("failed to query user by ID %d: %w", id, err)
+    }
+
+    user.LastLogin = lastLogin.String
+    if subID.Valid {
+        user.Subscription = &entities.Subscription{
+            ID:        int(subID.Int64),
+            UserID:    int(subUserID.Int64),
+            PlanID:    int(subPlanID.Int64),
+            PlanName:  subPlanName.String,
+            Status:    subStatus.String,
+            StartedAt: subStartedAt.Time,
+            ExpiresAt: subExpiresAt.Time,
+        }
+    }
+
+    return &user, nil
 }
 
 func (r *UserRepository) FindByEmail(email string) (*entities.User, error) {
-    query := "SELECT id, email, password, role, first_name, last_name, phone, address, country, workshop_name, is_active, deleted, last_login, verified FROM users WHERE email = ?"
+    query := `
+        SELECT 
+            u.id, u.email, u.password, u.role, u.first_name, u.last_name, u.phone, 
+            u.address, u.country, u.workshop_name, u.is_active, u.deleted, u.last_login, u.verified,
+            s.id, s.user_id, s.plan_id, sp.name, s.status, s.started_at, s.expires_at
+        FROM users u
+        LEFT JOIN subscriptions s ON u.id = s.user_id AND s.status = 'active'
+        LEFT JOIN subscription_plans sp ON s.plan_id = sp.id
+        WHERE u.email = ?
+    `
     var user entities.User
     var lastLogin sql.NullString
+    var subID, subUserID, subPlanID sql.NullInt64
+    var subPlanName, subStatus sql.NullString
+    var subStartedAt, subExpiresAt sql.NullTime
 
     err := r.db.QueryRow(query, email).Scan(
         &user.ID, &user.Email, &user.Password, &user.Role, &user.FirstName, &user.LastName,
         &user.Phone, &user.Address, &user.Country, &user.WorkshopName, &user.IsActive,
         &user.Deleted, &lastLogin, &user.Verified,
+        &subID, &subUserID, &subPlanID, &subPlanName, &subStatus, &subStartedAt, &subExpiresAt,
     )
     if err == sql.ErrNoRows {
         return nil, nil
@@ -106,35 +141,71 @@ func (r *UserRepository) FindByEmail(email string) (*entities.User, error) {
     if err != nil {
         return nil, fmt.Errorf("failed to query user by email %q: %w", email, err)
     }
+
     user.LastLogin = lastLogin.String
+    if subID.Valid {
+        user.Subscription = &entities.Subscription{
+            ID:        int(subID.Int64),
+            UserID:    int(subUserID.Int64),
+            PlanID:    int(subPlanID.Int64),
+            PlanName:  subPlanName.String,
+            Status:    subStatus.String,
+            StartedAt: subStartedAt.Time,
+            ExpiresAt: subExpiresAt.Time,
+        }
+    }
+
     return &user, nil
 }
 
 func (r *UserRepository) FindAll() ([]*entities.User, error) {
-	query := `
-        SELECT id, email, password, role, first_name, last_name, phone, address, country,
-               workshop_name, is_active, deleted, last_login, verified
-        FROM users
+    query := `
+        SELECT 
+            u.id, u.email, u.password, u.role, u.first_name, u.last_name, u.phone, 
+            u.address, u.country, u.workshop_name, u.is_active, u.deleted, u.last_login, u.verified,
+            s.id, s.user_id, s.plan_id, sp.name, s.status, s.started_at, s.expires_at
+        FROM users u
+        LEFT JOIN subscriptions s ON u.id = s.user_id AND s.status = 'active'
+        LEFT JOIN subscription_plans sp ON s.plan_id = sp.id
     `
-	rows, err := r.db.Query(query)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
+    rows, err := r.db.Query(query)
+    if err != nil {
+        return nil, fmt.Errorf("failed to query all users: %w", err)
+    }
+    defer rows.Close()
 
-	var users []*entities.User
-	for rows.Next() {
-		var user entities.User
-		var lastLogin sql.NullString
-		if err := rows.Scan(
-			&user.ID, &user.Email, &user.Password, &user.Role, &user.FirstName, &user.LastName,
-			&user.Phone, &user.Address, &user.Country, &user.WorkshopName, &user.IsActive,
-			&user.Deleted, &lastLogin, &user.Verified,
-		); err != nil {
-			return nil, err
-		}
-		user.LastLogin = lastLogin.String
-		users = append(users, &user)
-	}
-	return users, nil
+    var users []*entities.User
+    for rows.Next() {
+        var user entities.User
+        var lastLogin sql.NullString
+        var subID, subUserID, subPlanID sql.NullInt64
+        var subPlanName, subStatus sql.NullString
+        var subStartedAt, subExpiresAt sql.NullTime
+
+        if err := rows.Scan(
+            &user.ID, &user.Email, &user.Password, &user.Role, &user.FirstName, &user.LastName,
+            &user.Phone, &user.Address, &user.Country, &user.WorkshopName, &user.IsActive,
+            &user.Deleted, &lastLogin, &user.Verified,
+            &subID, &subUserID, &subPlanID, &subPlanName, &subStatus, &subStartedAt, &subExpiresAt,
+        ); err != nil {
+            return nil, fmt.Errorf("failed to scan user: %w", err)
+        }
+
+        user.LastLogin = lastLogin.String
+        if subID.Valid {
+            user.Subscription = &entities.Subscription{
+                ID:        int(subID.Int64),
+                UserID:    int(subUserID.Int64),
+                PlanID:    int(subPlanID.Int64),
+                PlanName:  subPlanName.String,
+                Status:    subStatus.String,
+                StartedAt: subStartedAt.Time,
+                ExpiresAt: subExpiresAt.Time,
+            }
+        }
+
+        users = append(users, &user)
+    }
+
+    return users, nil
 }

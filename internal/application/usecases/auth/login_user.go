@@ -58,6 +58,9 @@ func (uc *LoginUseCase) Execute(input dtos.LoginInput) (*dtos.LoginResponse, err
 		return nil, err
 	}
 
+	// debug user
+	println("USER: ", user)
+
 	profile := &dtos.ProfileResponse{
         ID:           user.ID,
         Email:        user.Email,
@@ -67,6 +70,7 @@ func (uc *LoginUseCase) Execute(input dtos.LoginInput) (*dtos.LoginResponse, err
         Country:      user.Country,
         WorkshopName: user.WorkshopName,
         LastLogin:    user.LastLogin,
+		Subscription: user.Subscription,
     }
 
 	return &dtos.LoginResponse{
