@@ -5,6 +5,7 @@ import (
 
 	"luthierSaas/internal/application/usecases/auth"
 	"luthierSaas/internal/interfaces/http/dtos"
+	"luthierSaas/internal/interfaces/http/middlewares"
 
 	customErr "luthierSaas/internal/interfaces/http/errors"
 
@@ -17,16 +18,18 @@ type AuthHandler struct {
     checkEmailUC *auth.CheckEmailUseCase
 	verifyEmailUC *auth.VerifyEmailUseCase
 	resendVerificationCodeUC *auth.ResendVerificationCodeUseCase
+	refreshTokenUC *auth.RefreshTokenUseCase
 }
 
 
-func NewAuthHandler(login *auth.LoginUseCase, register *auth.RegisterUserUseCase, checkEmail *auth.CheckEmailUseCase, verifyEmail *auth.VerifyEmailUseCase, resendVerificationCode *auth.ResendVerificationCodeUseCase) *AuthHandler {
+func NewAuthHandler(login *auth.LoginUseCase, register *auth.RegisterUserUseCase, checkEmail *auth.CheckEmailUseCase, verifyEmail *auth.VerifyEmailUseCase, resendVerificationCode *auth.ResendVerificationCodeUseCase, refreshToken *auth.RefreshTokenUseCase) *AuthHandler {
     return &AuthHandler{
 		loginUC:          login,
         registerUC:          register,
         checkEmailUC:       checkEmail,
 		verifyEmailUC:      verifyEmail,
 		resendVerificationCodeUC: resendVerificationCode,
+		refreshTokenUC: refreshToken,
     }
 }
 
@@ -132,4 +135,30 @@ func (h *AuthHandler) ResendVerificationCode(c *gin.Context) {
 	}
 	
 	c.JSON(http.StatusOK, gin.H{"message": "Verification code resent successfully"})
+}
+
+func (h *AuthHandler) RefreshToken(c *gin.Context) {
+	userIDVal, exists := c.Get(middlewares.RefreshUserIDKey)
+    if !exists {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+        return
+    }
+
+    userID, ok := userIDVal.(int)
+    if !ok {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID type"})
+        return
+    }
+
+	result, err := h.refreshTokenUC.Execute(userID)
+
+	if err != nil {
+		c.Error(customErr.New(http.StatusInternalServerError, "Failed to resend verification code", err.Error()))
+		return
+	}
+
+	c.SetCookie("access_token", result.AccessToken, 3600, "/", "", false, true) 
+	c.SetCookie("refresh_token", result.RefreshToken, 604800, "/", "", false, true) 
+	
+	c.JSON(http.StatusOK, gin.H{"message": "Token refresh successfully"})
 }

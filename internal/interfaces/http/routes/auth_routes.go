@@ -2,6 +2,7 @@ package routes
 
 import (
 	"luthierSaas/internal/interfaces/http/handlers"
+	"luthierSaas/internal/interfaces/http/middlewares"
 
 	"github.com/gin-gonic/gin"
 )
@@ -13,5 +14,6 @@ func SetupAuthRoutes(api *gin.RouterGroup, authHandler *handlers.AuthHandler) {
         auth.POST("/check-email", authHandler.CheckEmail)
         auth.POST("/verify-email", authHandler.VerifyEmail)
         auth.POST("/resend-code", authHandler.ResendVerificationCode)
+        auth.POST("/refresh", middlewares.RefreshMiddleware(), authHandler.RefreshToken)
     }
 }

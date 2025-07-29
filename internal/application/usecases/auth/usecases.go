@@ -11,6 +11,7 @@ type AuthUseCases struct {
     CheckEmail *CheckEmailUseCase
     VerifyEmail *VerifyEmailUseCase
     ResendVerificationCode *ResendVerificationCodeUseCase
+    RefreshToken *RefreshTokenUseCase
 }
 
 func NewAuthUseCases(userRepo repository.UserRepository, emailVerificationRepo repository.EmailVerificationRepository, emailService *email.EmailService) *AuthUseCases{
@@ -20,5 +21,6 @@ func NewAuthUseCases(userRepo repository.UserRepository, emailVerificationRepo r
         CheckEmail: NewCheckEmailUseCase(userRepo),
         VerifyEmail: NewVerifyEmailUseCase(userRepo, emailVerificationRepo),
         ResendVerificationCode: NewResendVerificationCodeUseCase(userRepo, emailVerificationRepo, emailService),
+        RefreshToken: NewRefreshTokenUseCase(),
     }
 }

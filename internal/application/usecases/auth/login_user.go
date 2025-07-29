@@ -58,7 +58,6 @@ func (uc *LoginUseCase) Execute(input dtos.LoginInput) (*dtos.LoginResponse, err
 		return nil, err
 	}
 
-	// Devolver respuesta
 	return &dtos.LoginResponse{
 		UserID:       user.ID,
 		Email:        user.Email,

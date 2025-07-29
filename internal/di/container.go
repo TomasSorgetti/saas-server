@@ -43,7 +43,8 @@ func NewContainer(db *sql.DB) (*Container, *email.EmailService) {
 	userUC := userUseCases.NewUserUseCases(userRepo, cacheService)
 
 	// Handlers
-	authHandler := handlers.NewAuthHandler( authUC.Login, authUC.Register, authUC.CheckEmail, authUC.VerifyEmail, authUC.ResendVerificationCode)
+	authHandler := handlers.NewAuthHandler( authUC.Login, authUC.Register, authUC.CheckEmail, authUC.VerifyEmail, authUC.ResendVerificationCode, authUC.RefreshToken)
+	
 	userHandler := handlers.NewUserHandler(userUC.Profile)
 
 	return &Container{

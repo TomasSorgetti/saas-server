@@ -7,11 +7,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const UserIDKey = "userID"
+const RefreshUserIDKey = "userID"
 
-func AuthMiddleware() gin.HandlerFunc {
+func RefreshMiddleware() gin.HandlerFunc {
     return func(c *gin.Context) {
-        cookie, err := c.Cookie("access_token") 
+        cookie, err := c.Cookie("refresh_token") 
         if err != nil {
             c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Missing or invalid cookie"})
             return
@@ -24,7 +24,7 @@ func AuthMiddleware() gin.HandlerFunc {
             return
         }
 
-        c.Set(UserIDKey, userID)
+        c.Set(RefreshUserIDKey, userID)
         c.Next()
     }
 }
