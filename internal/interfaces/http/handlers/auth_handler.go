@@ -160,5 +160,5 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 	c.SetCookie("access_token", result.AccessToken, 3600, "/", "", false, true) 
 	c.SetCookie("refresh_token", result.RefreshToken, 604800, "/", "", false, true) 
 	
-	c.JSON(http.StatusOK, gin.H{"message": "Token refresh successfully"})
+	c.JSON(http.StatusOK, result.Profile)
 }
