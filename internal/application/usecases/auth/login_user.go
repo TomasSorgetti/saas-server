@@ -72,7 +72,7 @@ func (uc *LoginUseCase) Execute(input dtos.LoginInput) (*dtos.LoginResponse, err
             }
 
 
-            err = uc.emailVerificationRepo.UpdateCode(ctx, emailVerification.ID, verificationCode)
+            err = uc.emailVerificationRepo.UpdateCode(ctx, emailVerification.ID, verificationCode, expiresAt)
 			
             if err != nil {
                 return nil, err

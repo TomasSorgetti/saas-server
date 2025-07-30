@@ -99,26 +99,22 @@ func (h *AuthHandler) CheckEmail(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"exists": false, "message": "Email available"})
 }
-
 func (h *AuthHandler) VerifyEmail(c *gin.Context) {
-	var input dtos.VerifyEmailInput
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.Error(customErr.New(http.StatusBadRequest, "Invalid input data", err.Error()))
-		return
-	}
+    var input dtos.VerifyEmailInput
+    if err := c.ShouldBindJSON(&input); err != nil {
+        c.Error(customErr.New(http.StatusBadRequest, "Invalid input data", err.Error()))
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input format"})
+        return
+    }
 
-	success, err := h.verifyEmailUC.Execute(input.VerificationToken, input.VerificationCode)
-	if err != nil {
-		c.Error(customErr.New(http.StatusInternalServerError, "Failed to verify email", err.Error()))
-		return
-	}
+    _, err := h.verifyEmailUC.Execute(input.VerificationToken, input.VerificationCode)
+    if err != nil {
+		status := http.StatusBadRequest
+        c.Error(customErr.New(status, "error to verify email", err.Error()))
+        return
+    }
 
-	if !success {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Verification failed"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "Email verified successfully"})
+    c.JSON(http.StatusOK, gin.H{"message": "Email verified successfully"})
 }
 
 func (h *AuthHandler) ResendVerificationCode(c *gin.Context) {
@@ -128,18 +124,13 @@ func (h *AuthHandler) ResendVerificationCode(c *gin.Context) {
 		return
 	}
 
-	success, err := h.resendVerificationCodeUC.Execute(input.VerificationToken)
+	result, err := h.resendVerificationCodeUC.Execute(input.VerificationToken)
 	if err != nil {
 		c.Error(customErr.New(http.StatusInternalServerError, "Failed to resend verification code", err.Error()))
 		return
 	}
-
-	if !success {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Failed to resend verification code"})
-		return
-	}
 	
-	c.JSON(http.StatusOK, gin.H{"message": "Verification code resent successfully"})
+	c.JSON(http.StatusOK, result)
 }
 
 func (h *AuthHandler) RefreshToken(c *gin.Context) {

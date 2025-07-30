@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"luthierSaas/internal/infrastructure/email"
 	"luthierSaas/internal/infrastructure/security"
+	"luthierSaas/internal/interfaces/http/dtos"
 	"luthierSaas/internal/interfaces/repository"
+	"time"
 )
 
 type ResendVerificationCodeUseCase struct {
@@ -21,29 +23,36 @@ func NewResendVerificationCodeUseCase(userRepo repository.UserRepository, emailV
 	}
 }
 
-func (uc *ResendVerificationCodeUseCase) Execute(verificationToken string) (bool, error) {
+func (uc *ResendVerificationCodeUseCase) Execute(verificationToken string) (*dtos.ResendCode, error) {
 	userId, userEmail, _, err := security.ValidateVerificationToken(verificationToken)
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 
 	emailVerificationCode, err := uc.emailVerificationRepo.GetByUserID(context.Background(), userId)
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 
 	if emailVerificationCode == nil {
-		return false, nil
+		return nil, err
 	}
-
+	
 	newCode, err := security.GenerateVerificationCode(6)
 	if err != nil {
-		return false, err
+		return nil, err
 	}
+	
+	newExpiresAt := time.Now().Add(15 * time.Minute)
 
-	err = uc.emailVerificationRepo.UpdateCode(context.Background(), emailVerificationCode.ID, newCode)
+	newVerificationToken, err := security.CreateVerificationToken(userId, userEmail, newExpiresAt)
 	if err != nil {
-		return false, err
+		return nil, err
+	}
+	
+	err = uc.emailVerificationRepo.UpdateCode(context.Background(), emailVerificationCode.ID, newCode, newExpiresAt)
+	if err != nil {
+		return nil, err
 	}
 
 	emailJob := email.EmailJob{
@@ -54,8 +63,11 @@ func (uc *ResendVerificationCodeUseCase) Execute(verificationToken string) (bool
 
 	if err := uc.emailService.SendEmailAsync(context.Background(), emailJob); err != nil {
 		// Deberia loguear el error - NOT_IMPLEMENTED
-		return false, fmt.Errorf("falló el envío del email de verificación: %w", err)
+		return nil, fmt.Errorf("falló el envío del email de verificación: %w", err)
 	}
 
-	return true, nil
+	return &dtos.ResendCode{
+		VerificationExpiresAt: newExpiresAt,
+        VerificationToken:   newVerificationToken,
+	},nil
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"time"
 
 	"luthierSaas/internal/domain/entities"
 	"luthierSaas/internal/interfaces/repository"
@@ -59,8 +60,8 @@ func (r *emailVerificationRepository) DeleteByUserID(ctx context.Context, userID
 	return err
 }
 
-func (r *emailVerificationRepository) UpdateCode(ctx context.Context, id int, newCode string) error {
-	query := `UPDATE email_verifications SET verification_code = ? WHERE id = ?`
-	_, err := r.db.ExecContext(ctx, query, newCode, id)
+func (r *emailVerificationRepository) UpdateCode(ctx context.Context, id int, newCode string, newExpiresAt time.Time) error {
+	query := `UPDATE email_verifications SET verification_code = ?, expires_at = ? WHERE id = ?`
+	_, err := r.db.ExecContext(ctx, query, newCode,newExpiresAt, id)
 	return err
 }
