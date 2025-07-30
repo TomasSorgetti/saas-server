@@ -77,7 +77,7 @@ func (uc *RegisterUserUseCase) Execute(input dtos.RegisterInput) (*dtos.Register
 		return nil, err
 	}
 
-	expiresAt := time.Now().Add(24 * time.Hour)
+	expiresAt := time.Now().Add(15 * time.Minute)
 
 	err = uc.userRepo.CreateEmailVerification(userID, code, expiresAt)
 	if err != nil {

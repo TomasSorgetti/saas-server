@@ -45,6 +45,15 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		c.Error(customErr.New(http.StatusBadRequest, "Invalid input data", err.Error()))
 		return
 	}
+	if result.VerificationRequired {
+        c.JSON(http.StatusOK, gin.H{
+            "verificationRequired": true,
+            "verificationToken":   result.VerificationToken,
+			"verificationCodeExpiresAt": result.VerificationExpiresAt,
+            "redirect":            result.Redirect,
+        })
+        return
+    }
 
 	// set domain to cookie with secure and httpOnly flags
 	// c.SetCookie("access_token", result.AccessToken, 3600, "/", "", true, true) 

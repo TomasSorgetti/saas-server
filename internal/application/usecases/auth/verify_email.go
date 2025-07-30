@@ -37,6 +37,10 @@ func (uc *VerifyEmailUseCase) Execute(verificationToken string, verificationCode
 		return false, err
 	}
 
+	if emailVerification.Verified {
+		return false, errors.New("email already verified")
+	}
+
 	if emailVerification.Code != verificationCode {
 		return false, errors.New("verification code is incorrect")
 	}

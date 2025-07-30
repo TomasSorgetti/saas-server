@@ -16,7 +16,7 @@ type AuthUseCases struct {
 
 func NewAuthUseCases(userRepo repository.UserRepository, suscriptionRepo repository.SubscriptionRepository, emailVerificationRepo repository.EmailVerificationRepository, emailService *email.EmailService) *AuthUseCases{
     return &AuthUseCases{
-        Login:      NewLoginUseCase(userRepo, emailVerificationRepo),
+        Login:      NewLoginUseCase(userRepo, emailVerificationRepo, emailService),
         Register:   NewRegisterUserUseCase(userRepo, suscriptionRepo, emailService),
         CheckEmail: NewCheckEmailUseCase(userRepo),
         VerifyEmail: NewVerifyEmailUseCase(userRepo, emailVerificationRepo),
