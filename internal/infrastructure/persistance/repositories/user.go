@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -218,4 +219,10 @@ func (r *UserRepository) EmailExists(email string) (bool, error) {
         return false, fmt.Errorf("failed to query email exists: %w", err)
     }
     return exists, nil
+}
+
+func (r *UserRepository) UpdateLastLogin(ctx context.Context, userID int, lastLogin time.Time) error {
+    query := `UPDATE users SET last_login = ? WHERE id = ?`
+    _, err := r.db.ExecContext(ctx, query, lastLogin, userID)
+    return err
 }

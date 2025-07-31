@@ -100,6 +100,15 @@ func (uc *LoginUseCase) Execute(input dtos.LoginInput) (*dtos.LoginResponse, err
         }, nil
     }
 
+	// Update LastLogin timestamp
+    currentTime := time.Now()
+    err = uc.userRepo.UpdateLastLogin(context.TODO(), user.ID, currentTime)
+    if err != nil {
+        return nil, err
+    }
+
+	user.LastLogin = currentTime.Format(time.RFC3339)
+
 	accessToken, err := security.CreateAccessToken(user.ID)
 	if err != nil {
 		return nil, err

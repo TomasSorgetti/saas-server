@@ -42,7 +42,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	
 	result, err := h.loginUC.Execute(input)
 	if err != nil {
-		c.Error(customErr.New(http.StatusBadRequest, "Invalid input data", err.Error()))
+		c.Error(customErr.New(http.StatusBadRequest, "Error to login", err.Error()))
 		return
 	}
 	if result.VerificationRequired {

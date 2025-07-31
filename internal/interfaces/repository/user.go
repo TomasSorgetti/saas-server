@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"luthierSaas/internal/domain/entities"
 	"time"
 )
@@ -13,4 +14,5 @@ type UserRepository interface {
     FindAll() ([]*entities.User, error)
     UpdateEmailVerified(userID int, verified bool) error
     EmailExists(email string) (bool, error)
+    UpdateLastLogin(ctx context.Context, userID int, lastLogin time.Time ) error
 }
