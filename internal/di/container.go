@@ -17,6 +17,7 @@ type Container struct {
 	AuthHandler *handlers.AuthHandler
 	UserHandler *handlers.UserHandler
 	RedisClient *redis.Client
+	CacheService *cache.Cache
 }
 
 func NewContainer(db *sql.DB) (*Container, *email.EmailService) {
@@ -52,5 +53,6 @@ func NewContainer(db *sql.DB) (*Container, *email.EmailService) {
 		AuthHandler: authHandler,
 		UserHandler: userHandler,
 		RedisClient: redisClient,
+		CacheService: cacheService,
 	}, emailService
 }
