@@ -40,7 +40,7 @@ func NewContainer(db *sql.DB) (*Container, *email.EmailService) {
 	cacheService := cache.NewCache(redisClient)
 
 	// Use cases
-	authUC := authUseCases.NewAuthUseCases(userRepo, suscriptionRepo, emailVerificationRepo, emailService)
+	authUC := authUseCases.NewAuthUseCases(userRepo, suscriptionRepo, emailVerificationRepo, emailService, cacheService)
 	userUC := userUseCases.NewUserUseCases(userRepo, cacheService)
 
 	// Handlers

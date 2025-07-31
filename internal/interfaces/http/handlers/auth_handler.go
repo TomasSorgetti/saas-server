@@ -70,7 +70,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	result, err := h.registerUC.Execute(input)
+	result, err := h.registerUC.Execute(c.Request.Context(), input)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not register user"})
 		return
@@ -80,25 +80,26 @@ func (h *AuthHandler) Register(c *gin.Context) {
 }
 
 func (h *AuthHandler) CheckEmail(c *gin.Context) {
-	var input dtos.CheckEmailInput
-	
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.Error(customErr.New(http.StatusBadRequest, "Invalid input data", err.Error()))
-		return
-	}
+    var input dtos.CheckEmailInput
+    
+    if err := c.ShouldBindJSON(&input); err != nil {
+        c.Error(customErr.New(http.StatusBadRequest, "Invalid input data", err.Error()))
+        return
+    }
 
-	exists, err := h.checkEmailUC.Execute(input.Email)
-	if err != nil {
-		c.Error(customErr.New(http.StatusInternalServerError, "Failed to check email", err.Error()))
-		return
-	}
+    exists, err := h.checkEmailUC.Execute(c.Request.Context(), input.Email)
+    if err != nil {
+        c.Error(customErr.New(http.StatusInternalServerError, "Failed to check email", err.Error()))
+        return
+    }
 
-	if exists {
-		c.JSON(http.StatusOK, gin.H{"exists": true, "message": "Email already registered"})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{"exists": false, "message": "Email available"})
+    if exists {
+        c.JSON(http.StatusOK, gin.H{"exists": true, "message": "Email already registered"})
+        return
+    }
+    c.JSON(http.StatusOK, gin.H{"exists": false, "message": "Email available"})
 }
+
 func (h *AuthHandler) VerifyEmail(c *gin.Context) {
     var input dtos.VerifyEmailInput
     if err := c.ShouldBindJSON(&input); err != nil {

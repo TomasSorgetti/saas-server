@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"luthierSaas/internal/domain/entities"
+	"luthierSaas/internal/infrastructure/cache"
 	"luthierSaas/internal/infrastructure/email"
 	"luthierSaas/internal/infrastructure/security"
 	"luthierSaas/internal/interfaces/http/dtos"
@@ -15,18 +16,23 @@ type RegisterUserUseCase struct {
 	userRepo     repository.UserRepository
 	subscriptionRepo     repository.SubscriptionRepository
 	emailService *email.EmailService
+	cacheService *cache.Cache
 }
 
 
-func NewRegisterUserUseCase(userRepo repository.UserRepository, subscriptionRepo repository.SubscriptionRepository, emailService *email.EmailService) *RegisterUserUseCase {
+func NewRegisterUserUseCase(userRepo repository.UserRepository, subscriptionRepo repository.SubscriptionRepository, emailService *email.EmailService, cacheService *cache.Cache) *RegisterUserUseCase {
 	return &RegisterUserUseCase{
 		userRepo:     userRepo,
 		subscriptionRepo: subscriptionRepo,
 		emailService: emailService,
+		cacheService: cacheService,
 	}
 }
 
-func (uc *RegisterUserUseCase) Execute(input dtos.RegisterInput) (*dtos.RegisterResponse, error) {
+func (uc *RegisterUserUseCase) Execute(ctx context.Context, input dtos.RegisterInput) (*dtos.RegisterResponse, error) {
+	cacheKey := fmt.Sprintf("email:check:%s", input.Email)
+    _ = uc.cacheService.Delete(ctx, cacheKey)
+
 	hashedPassword, err := security.HashPassword(input.Password)
 	if err != nil {
 		return nil, err

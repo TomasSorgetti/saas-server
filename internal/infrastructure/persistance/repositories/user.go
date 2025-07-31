@@ -209,3 +209,13 @@ func (r *UserRepository) FindAll() ([]*entities.User, error) {
 
     return users, nil
 }
+
+func (r *UserRepository) EmailExists(email string) (bool, error) {
+    query := `SELECT EXISTS (SELECT 1 FROM users WHERE email = ?)`
+    var exists bool
+    err := r.db.QueryRow(query, email).Scan(&exists)
+    if err != nil {
+        return false, fmt.Errorf("failed to query email exists: %w", err)
+    }
+    return exists, nil
+}
