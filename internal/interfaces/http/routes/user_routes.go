@@ -12,5 +12,6 @@ func SetupUserRoutes(api *gin.RouterGroup, userHandler *handlers.UserHandler) {
     users := api.Group("/users")
     {
         users.GET("profile", middlewares.AuthMiddleware(), userHandler.GetProfile)
+        users.POST("change-password", middlewares.AuthMiddleware(), userHandler.ChangePassword)
     }
 }

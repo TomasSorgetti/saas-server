@@ -7,10 +7,12 @@ import (
 
 type UserUseCases struct {
     Profile      *ProfileUseCase
+    ChangePassword *ChangePasswordUseCase
 }
 
 func NewUserUseCases(userRepo repository.UserRepository, cacheService *cache.Cache) *UserUseCases{
     return &UserUseCases{
         Profile:      NewProfileUseCase(userRepo, cacheService ),
+        ChangePassword: NewChangePasswordUseCase(userRepo, cacheService),
     }
 }

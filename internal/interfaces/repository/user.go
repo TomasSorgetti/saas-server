@@ -15,4 +15,5 @@ type UserRepository interface {
     UpdateEmailVerified(userID int, verified bool) error
     EmailExists(email string) (bool, error)
     UpdateLastLogin(ctx context.Context, userID int, lastLogin time.Time ) error
+    UpdatePassword(userID int, newPassword string ) error
 }

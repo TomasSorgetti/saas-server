@@ -226,3 +226,23 @@ func (r *UserRepository) UpdateLastLogin(ctx context.Context, userID int, lastLo
     _, err := r.db.ExecContext(ctx, query, lastLogin, userID)
     return err
 }
+
+func (r *UserRepository) UpdatePassword(userID int, newPassword string) error {
+    query := "UPDATE users SET password = ? WHERE id = ?"
+    
+    result, err := r.db.Exec(query, newPassword, userID)
+    if err != nil {
+        return err
+    }
+
+    rowsAffected, err := result.RowsAffected()
+    if err != nil {
+        return err
+    }
+
+    if rowsAffected == 0 {
+        return errors.New("no user found with the given ID")
+    }
+
+    return nil
+}
