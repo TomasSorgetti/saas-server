@@ -1,8 +1,11 @@
 package user
 
 import (
+	"context"
 	"errors"
+	"fmt"
 	"luthierSaas/internal/infrastructure/cache"
+	"luthierSaas/internal/infrastructure/email"
 	"luthierSaas/internal/infrastructure/security"
 	"luthierSaas/internal/interfaces/http/dtos"
 	"luthierSaas/internal/interfaces/repository"
@@ -11,10 +14,11 @@ import (
 type ChangePasswordUseCase struct {
 	userRepo repository.UserRepository
 	cache    *cache.Cache
+	emailService *email.EmailService
 }
 
-func NewChangePasswordUseCase(userRepo repository.UserRepository, cache *cache.Cache) *ChangePasswordUseCase {
-	return &ChangePasswordUseCase{userRepo, cache}
+func NewChangePasswordUseCase(userRepo repository.UserRepository, cache *cache.Cache, emailService *email.EmailService) *ChangePasswordUseCase {
+	return &ChangePasswordUseCase{userRepo, cache, emailService}
 }
 
 func (uc *ChangePasswordUseCase) Execute(userID int, input dtos.ChangePasswordInput) (error) {
@@ -45,6 +49,17 @@ func (uc *ChangePasswordUseCase) Execute(userID int, input dtos.ChangePasswordIn
     if err != nil {
         return errors.New("failed to update password")
     }
+
+    emailJob := email.EmailJob{
+		To:      user.Email,
+		Subject: "Se modificó tu contraseña",
+		Body:    "Tu contraseña ha sido modificada recientemente. Si no has sido tú, cambia la contraseña y cierra todas sesiones.",
+	}
+
+	if err := uc.emailService.SendEmailAsync(context.Background(), emailJob); err != nil {
+		// Deberia loguear el error - NOT_IMPLEMENTED
+		return fmt.Errorf("falló el envío del email de verificación: %w", err)
+	}
 
     return nil
 }

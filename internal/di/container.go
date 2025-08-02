@@ -42,7 +42,7 @@ func NewContainer(db *sql.DB) (*Container, *email.EmailService) {
 
 	// Use cases
 	authUC := authUseCases.NewAuthUseCases(userRepo, suscriptionRepo, emailVerificationRepo, emailService, cacheService)
-	userUC := userUseCases.NewUserUseCases(userRepo, cacheService)
+	userUC := userUseCases.NewUserUseCases(userRepo, cacheService, emailService)
 
 	// Handlers
 	authHandler := handlers.NewAuthHandler( authUC.Login, authUC.Register, authUC.CheckEmail, authUC.VerifyEmail, authUC.ResendVerificationCode, authUC.RefreshToken, authUC.GoogleLogin, authUC.GoogleCallback)
