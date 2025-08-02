@@ -52,6 +52,7 @@ func (uc *ProfileUseCase) Execute(userID int) (*dtos.ProfileResponse, error) {
 		FirstName:    user.FirstName,
 		LastName:     user.LastName,
 		Phone:        user.Phone,
+		Address:      user.Address,
 		Country:      user.Country,
 		WorkshopName: user.WorkshopName,
 		LastLogin:    user.LastLogin,

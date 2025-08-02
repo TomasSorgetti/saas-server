@@ -36,9 +36,7 @@ func (uc *LoginUseCase) Execute(input dtos.LoginInput) (*dtos.LoginResponse, err
 		return nil, errors.New("user not found")
 	}
 
-	// NOT IMPLEMENTED: Login method handling
-	loginMethod := "password"
-	if (loginMethod != "password") {
+	if user.LoginMethod != nil {
 		return nil, errors.New("invalid login method")
 	}
 
@@ -125,6 +123,7 @@ func (uc *LoginUseCase) Execute(input dtos.LoginInput) (*dtos.LoginResponse, err
         FirstName:    user.FirstName,
         LastName:     user.LastName,
         Phone:        user.Phone,
+        Address:      user.Address,
         Country:      user.Country,
         WorkshopName: user.WorkshopName,
         LastLogin:    user.LastLogin,

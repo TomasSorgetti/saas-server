@@ -13,6 +13,8 @@ type AuthUseCases struct {
     VerifyEmail *VerifyEmailUseCase
     ResendVerificationCode *ResendVerificationCodeUseCase
     RefreshToken *RefreshTokenUseCase
+    GoogleLogin *LoginGoogleUseCase
+    GoogleCallback *GoogleCallbackUseCase
 }
 
 func NewAuthUseCases(userRepo repository.UserRepository, suscriptionRepo repository.SubscriptionRepository, emailVerificationRepo repository.EmailVerificationRepository, emailService *email.EmailService, cacheService *cache.Cache) *AuthUseCases{
@@ -23,5 +25,7 @@ func NewAuthUseCases(userRepo repository.UserRepository, suscriptionRepo reposit
         VerifyEmail: NewVerifyEmailUseCase(userRepo, emailVerificationRepo),
         ResendVerificationCode: NewResendVerificationCodeUseCase(userRepo, emailVerificationRepo, emailService),
         RefreshToken: NewRefreshTokenUseCase(userRepo),
+        GoogleLogin: NewLoginGoogleUseCase(userRepo, emailVerificationRepo, emailService),
+        GoogleCallback: NewGoogleCallbackUseCase(),
     }
 }

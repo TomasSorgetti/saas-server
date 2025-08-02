@@ -19,10 +19,12 @@ type AuthHandler struct {
 	verifyEmailUC *auth.VerifyEmailUseCase
 	resendVerificationCodeUC *auth.ResendVerificationCodeUseCase
 	refreshTokenUC *auth.RefreshTokenUseCase
+	googleLoginUC *auth.LoginGoogleUseCase
+	googleCallbackUC *auth.GoogleCallbackUseCase
 }
 
 
-func NewAuthHandler(login *auth.LoginUseCase, register *auth.RegisterUserUseCase, checkEmail *auth.CheckEmailUseCase, verifyEmail *auth.VerifyEmailUseCase, resendVerificationCode *auth.ResendVerificationCodeUseCase, refreshToken *auth.RefreshTokenUseCase) *AuthHandler {
+func NewAuthHandler(login *auth.LoginUseCase, register *auth.RegisterUserUseCase, checkEmail *auth.CheckEmailUseCase, verifyEmail *auth.VerifyEmailUseCase, resendVerificationCode *auth.ResendVerificationCodeUseCase, refreshToken *auth.RefreshTokenUseCase, googleLoginUC *auth.LoginGoogleUseCase, googleCallbackUC *auth.GoogleCallbackUseCase) *AuthHandler {
     return &AuthHandler{
 		loginUC:          login,
         registerUC:          register,
@@ -30,6 +32,8 @@ func NewAuthHandler(login *auth.LoginUseCase, register *auth.RegisterUserUseCase
 		verifyEmailUC:      verifyEmail,
 		resendVerificationCodeUC: resendVerificationCode,
 		refreshTokenUC: refreshToken,
+		googleLoginUC: googleLoginUC,
+		googleCallbackUC: googleCallbackUC,
     }
 }
 
@@ -165,4 +169,16 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 	c.SetCookie("refresh_token", "", -1, "/", "", false, true)
 
 	c.JSON(http.StatusOK, gin.H{"message": "Session logout success"})
+}
+
+func (h *AuthHandler) GoogleLogin(c *gin.Context) {
+    err := h.googleLoginUC.Execute()
+	
+	c.Error(customErr.New(http.StatusInternalServerError, "not implemented", err.Error()))
+
+}
+
+func (h *AuthHandler) GoogleCallback(c *gin.Context) {
+    err := h.googleCallbackUC.Execute()
+	c.Error(customErr.New(http.StatusInternalServerError, "not implemented", err.Error()))
 }

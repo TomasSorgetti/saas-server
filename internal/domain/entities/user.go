@@ -15,5 +15,6 @@ type User struct {
 	Deleted      bool
 	LastLogin    string
 	Verified     bool
+	LoginMethod  *string
 	Subscription *Subscription
 }

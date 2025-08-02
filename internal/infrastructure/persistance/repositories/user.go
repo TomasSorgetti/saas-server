@@ -71,7 +71,7 @@ func (r *UserRepository) FindByID(id int) (*entities.User, error) {
     query := `
         SELECT 
             u.id, u.email, u.password, u.role, u.first_name, u.last_name, u.phone, 
-            u.address, u.country, u.workshop_name, u.is_active, u.deleted, u.last_login, u.verified,
+            u.address, u.country, u.workshop_name, u.is_active, u.deleted, u.last_login, u.verified, u.login_method,
             s.id, s.user_id, s.plan_id, sp.name, s.status, s.started_at, s.expires_at
         FROM users u
         LEFT JOIN subscriptions s ON u.id = s.user_id AND s.status = 'active'
@@ -87,7 +87,7 @@ func (r *UserRepository) FindByID(id int) (*entities.User, error) {
     err := r.db.QueryRow(query, id).Scan(
         &user.ID, &user.Email, &user.Password, &user.Role, &user.FirstName, &user.LastName,
         &user.Phone, &user.Address, &user.Country, &user.WorkshopName, &user.IsActive,
-        &user.Deleted, &lastLogin, &user.Verified,
+        &user.Deleted, &lastLogin, &user.Verified, &user.LoginMethod,
         &subID, &subUserID, &subPlanID, &subPlanName, &subStatus, &subStartedAt, &subExpiresAt,
     )
     if err == sql.ErrNoRows {
@@ -117,7 +117,7 @@ func (r *UserRepository) FindByEmail(email string) (*entities.User, error) {
     query := `
         SELECT 
             u.id, u.email, u.password, u.role, u.first_name, u.last_name, u.phone, 
-            u.address, u.country, u.workshop_name, u.is_active, u.deleted, u.last_login, u.verified,
+            u.address, u.country, u.workshop_name, u.is_active, u.deleted, u.last_login, u.verified, u.login_method,
             s.id, s.user_id, s.plan_id, sp.name, s.status, s.started_at, s.expires_at
         FROM users u
         LEFT JOIN subscriptions s ON u.id = s.user_id AND s.status = 'active'
@@ -133,7 +133,7 @@ func (r *UserRepository) FindByEmail(email string) (*entities.User, error) {
     err := r.db.QueryRow(query, email).Scan(
         &user.ID, &user.Email, &user.Password, &user.Role, &user.FirstName, &user.LastName,
         &user.Phone, &user.Address, &user.Country, &user.WorkshopName, &user.IsActive,
-        &user.Deleted, &lastLogin, &user.Verified,
+        &user.Deleted, &lastLogin, &user.Verified, &user.LoginMethod,
         &subID, &subUserID, &subPlanID, &subPlanName, &subStatus, &subStartedAt, &subExpiresAt,
     )
     if err == sql.ErrNoRows {
@@ -163,7 +163,7 @@ func (r *UserRepository) FindAll() ([]*entities.User, error) {
     query := `
         SELECT 
             u.id, u.email, u.password, u.role, u.first_name, u.last_name, u.phone, 
-            u.address, u.country, u.workshop_name, u.is_active, u.deleted, u.last_login, u.verified,
+            u.address, u.country, u.workshop_name, u.is_active, u.deleted, u.last_login, u.verified, u.login_method,
             s.id, s.user_id, s.plan_id, sp.name, s.status, s.started_at, s.expires_at
         FROM users u
         LEFT JOIN subscriptions s ON u.id = s.user_id AND s.status = 'active'
@@ -186,7 +186,7 @@ func (r *UserRepository) FindAll() ([]*entities.User, error) {
         if err := rows.Scan(
             &user.ID, &user.Email, &user.Password, &user.Role, &user.FirstName, &user.LastName,
             &user.Phone, &user.Address, &user.Country, &user.WorkshopName, &user.IsActive,
-            &user.Deleted, &lastLogin, &user.Verified,
+            &user.Deleted, &lastLogin, &user.Verified, &user.LoginMethod,
             &subID, &subUserID, &subPlanID, &subPlanName, &subStatus, &subStartedAt, &subExpiresAt,
         ); err != nil {
             return nil, fmt.Errorf("failed to scan user: %w", err)
