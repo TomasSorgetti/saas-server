@@ -12,5 +12,6 @@ type ProfileResponse struct {
 	Country      string            `json:"country"`
 	WorkshopName string            `json:"workshop_name"`
 	LastLogin    string            `json:"last_login"`
+	LoginMethod  string            `json:"login_method"`
 	Subscription *entities.Subscription `json:"subscription,omitempty"`
 }

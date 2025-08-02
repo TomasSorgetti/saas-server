@@ -56,6 +56,7 @@ func (uc *ProfileUseCase) Execute(userID int) (*dtos.ProfileResponse, error) {
 		Country:      user.Country,
 		WorkshopName: user.WorkshopName,
 		LastLogin:    user.LastLogin,
+		LoginMethod:  func() string { if user.LoginMethod != nil { return *user.LoginMethod }; return "" }(),
 		Subscription: user.Subscription,
 	}
 
