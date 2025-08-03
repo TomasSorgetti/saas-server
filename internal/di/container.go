@@ -6,6 +6,7 @@ import (
 	userUseCases "luthierSaas/internal/application/usecases/user"
 	"luthierSaas/internal/infrastructure/cache"
 	"luthierSaas/internal/infrastructure/email"
+	"luthierSaas/internal/infrastructure/logger"
 	"luthierSaas/internal/infrastructure/persistance/repositories"
 	"luthierSaas/internal/infrastructure/queue"
 	"luthierSaas/internal/interfaces/http/handlers"
@@ -21,6 +22,9 @@ type Container struct {
 }
 
 func NewContainer(db *sql.DB) (*Container, *email.EmailService) {
+	// Logger
+	log := logger.NewLogger()
+	
 	// Repositorios
 	userRepo := repositories.NewUserRepository(db)
 	suscriptionRepo := repositories.NewSubscriptionRepository(db)
@@ -42,8 +46,8 @@ func NewContainer(db *sql.DB) (*Container, *email.EmailService) {
 	cacheService := cache.NewCache(redisClient)
 
 	// Use cases
-	authUC := authUseCases.NewAuthUseCases(userRepo, suscriptionRepo, emailVerificationRepo, sessionRepo, emailService, cacheService)
-	userUC := userUseCases.NewUserUseCases(userRepo, sessionRepo, cacheService, emailService)
+	authUC := authUseCases.NewAuthUseCases(userRepo, suscriptionRepo, emailVerificationRepo, sessionRepo, emailService, cacheService, log)
+	userUC := userUseCases.NewUserUseCases(userRepo, sessionRepo, cacheService, emailService, log)
 
 	// Handlers
 	authHandler := handlers.NewAuthHandler( authUC.Login, authUC.Register, authUC.CheckEmail, authUC.VerifyEmail, authUC.ResendVerificationCode, authUC.RefreshToken, authUC.GoogleLogin, authUC.GoogleCallback, authUC.Logout)

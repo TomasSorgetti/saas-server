@@ -10,6 +10,8 @@ import (
 	"luthierSaas/internal/interfaces/http/dtos"
 	"luthierSaas/internal/interfaces/repository"
 	"time"
+
+	"github.com/rs/zerolog"
 )
 
 type RegisterUserUseCase struct {
@@ -17,15 +19,17 @@ type RegisterUserUseCase struct {
 	subscriptionRepo     repository.SubscriptionRepository
 	emailService *email.EmailService
 	cacheService *cache.Cache
+	logger      *zerolog.Logger
 }
 
 
-func NewRegisterUserUseCase(userRepo repository.UserRepository, subscriptionRepo repository.SubscriptionRepository, emailService *email.EmailService, cacheService *cache.Cache) *RegisterUserUseCase {
+func NewRegisterUserUseCase(userRepo repository.UserRepository, subscriptionRepo repository.SubscriptionRepository, emailService *email.EmailService, cacheService *cache.Cache, logger *zerolog.Logger) *RegisterUserUseCase {
 	return &RegisterUserUseCase{
 		userRepo:     userRepo,
 		subscriptionRepo: subscriptionRepo,
 		emailService: emailService,
 		cacheService: cacheService,
+		logger: logger,
 	}
 }
 
@@ -35,6 +39,10 @@ func (uc *RegisterUserUseCase) Execute(ctx context.Context, input dtos.RegisterI
 
 	hashedPassword, err := security.HashPassword(input.Password)
 	if err != nil {
+		uc.logger.Error().
+            Err(err).
+            Str("email", input.Email).
+            Msg("Failed to hash password")
 		return nil, err
 	}
 
@@ -56,11 +64,19 @@ func (uc *RegisterUserUseCase) Execute(ctx context.Context, input dtos.RegisterI
 
 	userID, err := uc.userRepo.Save(user)
 	if err != nil {
+		uc.logger.Error().
+            Err(err).
+            Str("email", input.Email).
+            Msg("Failed to save user")
 		return nil, err
 	}
 
 	planID, err := uc.subscriptionRepo.GetFreeTierPlanID()
     if err != nil {
+		uc.logger.Error().
+            Err(err).
+            Int("user_id", userID).
+            Msg("Failed to get free tier plan ID")
         return nil, fmt.Errorf("failed to get Free Tier plan ID: %w", err)
     }
 
@@ -75,11 +91,20 @@ func (uc *RegisterUserUseCase) Execute(ctx context.Context, input dtos.RegisterI
 
     _, err = uc.subscriptionRepo.Save(subscription)
     if err != nil {
+		uc.logger.Error().
+            Err(err).
+            Int("user_id", userID).
+            Int("plan_id", planID).
+            Msg("Failed to create subscription")
         return nil, fmt.Errorf("failed to create subscription for user %d: %w", userID, err)
     }
 	
 	code, err := security.GenerateVerificationCode(6)
 	if err != nil {
+		uc.logger.Error().
+            Err(err).
+            Int("user_id", userID).
+            Msg("Failed to generate verification code")
 		return nil, err
 	}
 
@@ -87,11 +112,19 @@ func (uc *RegisterUserUseCase) Execute(ctx context.Context, input dtos.RegisterI
 
 	err = uc.userRepo.CreateEmailVerification(userID, code, expiresAt)
 	if err != nil {
+		uc.logger.Error().
+            Err(err).
+            Int("user_id", userID).
+            Msg("Failed to create email verification")
 		return nil, err
 	}
 
 	verificationToken, err := security.CreateVerificationToken(userID, user.Email, expiresAt)
 	if err != nil {
+		uc.logger.Error().
+            Err(err).
+            Int("user_id", userID).
+            Msg("Failed to create verification token")
 		return nil, err
 	}
 	
@@ -102,9 +135,18 @@ func (uc *RegisterUserUseCase) Execute(ctx context.Context, input dtos.RegisterI
 	}
 
 	if err := uc.emailService.SendEmailAsync(context.Background(), emailJob); err != nil {
-		// Deberia loguear el error - NOT_IMPLEMENTED
+		uc.logger.Error().
+            Err(err).
+            Int("user_id", userID).
+            Str("email", user.Email).
+            Msg("Failed to send verification email")
 		return nil, fmt.Errorf("falló el envío del email de verificación: %w", err)
 	}
+
+	uc.logger.Info().
+        Int("user_id", userID).
+        Str("email", user.Email).
+        Msg("User registered successfully")
 
 	return &dtos.RegisterResponse{
 		VerificationToken: verificationToken,

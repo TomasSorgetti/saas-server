@@ -4,6 +4,8 @@ import (
 	"luthierSaas/internal/infrastructure/cache"
 	"luthierSaas/internal/infrastructure/email"
 	"luthierSaas/internal/interfaces/repository"
+
+	"github.com/rs/zerolog"
 )
 
 type AuthUseCases struct {
@@ -25,17 +27,18 @@ func NewAuthUseCases(
     sessionRepo repository.SessionRepository, 
     emailService *email.EmailService, 
     cacheService *cache.Cache,
+    logger      *zerolog.Logger,
     ) *AuthUseCases{
         
     return &AuthUseCases{
-        Login:      NewLoginUseCase(userRepo, emailVerificationRepo, sessionRepo, emailService),
-        Register:   NewRegisterUserUseCase(userRepo, suscriptionRepo, emailService, cacheService),
+        Login:      NewLoginUseCase(userRepo, emailVerificationRepo, sessionRepo, emailService, logger),
+        Register:   NewRegisterUserUseCase(userRepo, suscriptionRepo, emailService, cacheService, logger),
         CheckEmail: NewCheckEmailUseCase(userRepo, cacheService),
         VerifyEmail: NewVerifyEmailUseCase(userRepo, emailVerificationRepo),
         ResendVerificationCode: NewResendVerificationCodeUseCase(userRepo, emailVerificationRepo, emailService),
         RefreshToken: NewRefreshTokenUseCase(userRepo, sessionRepo),
         GoogleLogin: NewLoginGoogleUseCase(userRepo, emailVerificationRepo, emailService),
         GoogleCallback: NewGoogleCallbackUseCase(),
-        Logout: NewLogoutUseCase(sessionRepo),
+        Logout: NewLogoutUseCase(sessionRepo, logger),
     }
 }
