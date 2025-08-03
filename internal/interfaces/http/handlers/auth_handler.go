@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 
 	"luthierSaas/internal/application/usecases/auth"
@@ -10,6 +11,7 @@ import (
 	customErr "luthierSaas/internal/interfaces/http/errors"
 
 	"github.com/gin-gonic/gin"
+	"github.com/mssola/useragent"
 )
 
 type AuthHandler struct {
@@ -43,8 +45,15 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input data"})
 		return
 	}
+	ua := useragent.New(c.GetHeader("User-Agent"))
+    browser, version := ua.Browser()
+    deviceType := "Desktop"
+    if ua.Mobile() {
+        deviceType = "Mobile"
+    }
+    deviceInfo := fmt.Sprintf("%s %s, %s, %s", browser, version, ua.OS(), deviceType)
 	
-	result, err := h.loginUC.Execute(input)
+	result, err := h.loginUC.Execute(input, deviceInfo)
 	if err != nil {
 		c.Error(customErr.New(http.StatusBadRequest, "Error to login", err.Error()))
 		return

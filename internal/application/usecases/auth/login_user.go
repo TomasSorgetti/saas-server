@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"luthierSaas/internal/domain/entities"
 	"luthierSaas/internal/infrastructure/email"
 	"luthierSaas/internal/infrastructure/security"
 	"luthierSaas/internal/interfaces/http/dtos"
@@ -28,7 +29,7 @@ func NewLoginUseCase(userRepo repository.UserRepository, emailVerificationRepo r
 	}
 }
 
-func (uc *LoginUseCase) Execute(input dtos.LoginInput) (*dtos.LoginResponse, error) {
+func (uc *LoginUseCase) Execute(input dtos.LoginInput, deviceInfo string) (*dtos.LoginResponse, error) {
 	user, err := uc.userRepo.FindByEmail(input.Email)
 	if err != nil {
 		return nil, err
@@ -118,6 +119,32 @@ func (uc *LoginUseCase) Execute(input dtos.LoginInput) (*dtos.LoginResponse, err
 	if err != nil {
 		return nil, err
 	}
+
+	accessTokenHash, err := security.HashToken(accessToken) // Asumiendo que tienes una función para hashear
+    if err != nil {
+        return nil, fmt.Errorf("failed to hash access token: %w", err)
+    }
+
+    refreshTokenHash, err := security.HashToken(refreshToken)
+    if err != nil {
+        return nil, fmt.Errorf("failed to hash refresh token: %w", err)
+    }
+
+    session := &entities.Session{
+        UserID:           user.ID,
+        AccessTokenHash:  accessTokenHash,
+        RefreshTokenHash: refreshTokenHash,
+        ExpiresAt:        time.Now().Add(15 * time.Minute), 
+        RefreshExpiresAt: time.Now().Add(7 * 24 * time.Hour), 
+        IsValid:          true,
+		DeviceInfo:       deviceInfo,
+    }
+
+    ctx := context.TODO()
+    err = uc.sessionRepo.Create(ctx, session)
+    if err != nil {
+        return nil, fmt.Errorf("failed to create session: %w", err)
+    }
 
 	profile := &dtos.ProfileResponse{
         ID:           user.ID,
