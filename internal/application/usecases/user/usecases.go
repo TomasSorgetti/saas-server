@@ -13,7 +13,7 @@ type UserUseCases struct {
 
 func NewUserUseCases(userRepo repository.UserRepository, sessionRepo repository.SessionRepository, cacheService *cache.Cache, emailService *email.EmailService) *UserUseCases{
     return &UserUseCases{
-        Profile:      NewProfileUseCase(userRepo, cacheService ),
-        ChangePassword: NewChangePasswordUseCase(userRepo, cacheService, emailService),
+        Profile:      NewProfileUseCase(userRepo, sessionRepo, cacheService ),
+        ChangePassword: NewChangePasswordUseCase(userRepo, sessionRepo, cacheService, emailService),
     }
 }

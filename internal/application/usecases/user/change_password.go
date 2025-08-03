@@ -13,12 +13,13 @@ import (
 
 type ChangePasswordUseCase struct {
 	userRepo repository.UserRepository
+	sessionRepo repository.SessionRepository
 	cache    *cache.Cache
 	emailService *email.EmailService
 }
 
-func NewChangePasswordUseCase(userRepo repository.UserRepository, cache *cache.Cache, emailService *email.EmailService) *ChangePasswordUseCase {
-	return &ChangePasswordUseCase{userRepo, cache, emailService}
+func NewChangePasswordUseCase(userRepo repository.UserRepository, sessionRepo repository.SessionRepository, cache *cache.Cache, emailService *email.EmailService) *ChangePasswordUseCase {
+	return &ChangePasswordUseCase{userRepo, sessionRepo, cache, emailService}
 }
 
 func (uc *ChangePasswordUseCase) Execute(userID int, input dtos.ChangePasswordInput) (error) {

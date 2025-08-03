@@ -9,10 +9,11 @@ import (
 
 type RefreshTokenUseCase struct {
 	userRepo repository.UserRepository
+	sessionRepo repository.SessionRepository
 }
 
-func NewRefreshTokenUseCase(userRepo repository.UserRepository) *RefreshTokenUseCase {
-	return &RefreshTokenUseCase{userRepo}
+func NewRefreshTokenUseCase(userRepo repository.UserRepository, sessionRepo repository.SessionRepository) *RefreshTokenUseCase {
+	return &RefreshTokenUseCase{userRepo, sessionRepo}
 }
 
 func (uc *RefreshTokenUseCase) Execute(userID int) (*dtos.RefreshResponse, error) {

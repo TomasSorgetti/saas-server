@@ -14,14 +14,16 @@ import (
 type LoginUseCase struct {
 	userRepo              repository.UserRepository
 	emailVerificationRepo  repository.EmailVerificationRepository
+	sessionRepo 			repository.SessionRepository
 	emailService *email.EmailService
 }
 
 
-func NewLoginUseCase(userRepo repository.UserRepository, emailVerificationRepo repository.EmailVerificationRepository, emailService *email.EmailService) *LoginUseCase {
+func NewLoginUseCase(userRepo repository.UserRepository, emailVerificationRepo repository.EmailVerificationRepository, sessionRepo repository.SessionRepository, emailService *email.EmailService) *LoginUseCase {
 	return &LoginUseCase{
 		userRepo:     userRepo,
 		emailVerificationRepo: emailVerificationRepo,
+		sessionRepo: sessionRepo,
 		emailService: emailService,
 	}
 }

@@ -13,11 +13,12 @@ import (
 
 type ProfileUseCase struct {
 	userRepo repository.UserRepository
+	sessionRepo repository.SessionRepository
 	cache    *cache.Cache
 }
 
-func NewProfileUseCase(userRepo repository.UserRepository, cache *cache.Cache) *ProfileUseCase {
-	return &ProfileUseCase{userRepo, cache}
+func NewProfileUseCase(userRepo repository.UserRepository,sessionRepo repository.SessionRepository, cache *cache.Cache) *ProfileUseCase {
+	return &ProfileUseCase{userRepo, sessionRepo, cache}
 }
 
 func (uc *ProfileUseCase) Execute(userID int) (*dtos.ProfileResponse, error) {
