@@ -1,12 +1,12 @@
 package handlers
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
 	"luthierSaas/internal/application/usecases/auth"
 	"luthierSaas/internal/interfaces/http/dtos"
-	"luthierSaas/internal/interfaces/http/middlewares"
 
 	customErr "luthierSaas/internal/interfaces/http/errors"
 
@@ -23,11 +23,23 @@ type AuthHandler struct {
 	refreshTokenUC *auth.RefreshTokenUseCase
 	googleLoginUC *auth.LoginGoogleUseCase
 	googleCallbackUC *auth.GoogleCallbackUseCase
+	logoutUC *auth.LogoutUseCase
 }
 
 
-func NewAuthHandler(login *auth.LoginUseCase, register *auth.RegisterUserUseCase, checkEmail *auth.CheckEmailUseCase, verifyEmail *auth.VerifyEmailUseCase, resendVerificationCode *auth.ResendVerificationCodeUseCase, refreshToken *auth.RefreshTokenUseCase, googleLoginUC *auth.LoginGoogleUseCase, googleCallbackUC *auth.GoogleCallbackUseCase) *AuthHandler {
-    return &AuthHandler{
+func NewAuthHandler(
+	login *auth.LoginUseCase, 
+	register *auth.RegisterUserUseCase, 
+	checkEmail *auth.CheckEmailUseCase, 
+	verifyEmail *auth.VerifyEmailUseCase, 
+	resendVerificationCode *auth.ResendVerificationCodeUseCase, 
+	refreshToken *auth.RefreshTokenUseCase, 
+	googleLoginUC *auth.LoginGoogleUseCase, 
+	googleCallbackUC *auth.GoogleCallbackUseCase, 
+	logoutUC *auth.LogoutUseCase,
+	) *AuthHandler {
+    
+	return &AuthHandler{
 		loginUC:          login,
         registerUC:          register,
         checkEmailUC:       checkEmail,
@@ -36,6 +48,7 @@ func NewAuthHandler(login *auth.LoginUseCase, register *auth.RegisterUserUseCase
 		refreshTokenUC: refreshToken,
 		googleLoginUC: googleLoginUC,
 		googleCallbackUC: googleCallbackUC,
+		logoutUC: logoutUC,
     }
 }
 
@@ -148,24 +161,26 @@ func (h *AuthHandler) ResendVerificationCode(c *gin.Context) {
 }
 
 func (h *AuthHandler) RefreshToken(c *gin.Context) {
-	userIDVal, exists := c.Get(middlewares.RefreshUserIDKey)
-    if !exists {
-        c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+	refreshToken, err := c.Cookie("refresh_token")
+    if err != nil || refreshToken == "" {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "no refresh token provided"})
         return
     }
 
-    userID, ok := userIDVal.(int)
-    if !ok {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID type"})
+    ua := useragent.New(c.GetHeader("User-Agent"))
+    browser, version := ua.Browser()
+    deviceType := "Desktop"
+    if ua.Mobile() {
+        deviceType = "Mobile"
+    }
+    deviceInfo := fmt.Sprintf("%s %s, %s, %s", browser, version, ua.OS(), deviceType)
+
+    ctx := c.Request.Context()
+    result, err := h.refreshTokenUC.Execute(ctx, refreshToken, deviceInfo)
+    if err != nil {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
         return
     }
-
-	result, err := h.refreshTokenUC.Execute(userID)
-
-	if err != nil {
-		c.Error(customErr.New(http.StatusInternalServerError, "Failed to resend verification code", err.Error()))
-		return
-	}
 
 	c.SetCookie("access_token", result.AccessToken, 3600, "/", "", false, true) 
 	c.SetCookie("refresh_token", result.RefreshToken, 604800, "/", "", false, true) 
@@ -174,6 +189,23 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 }
 
 func (h *AuthHandler) Logout(c *gin.Context) {
+	accessToken, err := c.Cookie("access_token")
+    if err != nil || accessToken == "" {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "no access token provided"})
+        return
+    }
+
+    ctx := c.Request.Context()
+    err = h.logoutUC.Execute(ctx, accessToken)
+    if err != nil {
+        if errors.Is(err, errors.New("session not found")) {
+            c.JSON(http.StatusBadRequest, gin.H{"error": "session not found"})
+            return
+        }
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+
 	c.SetCookie("access_token", "", -1, "/", "", false, true)
 	c.SetCookie("refresh_token", "", -1, "/", "", false, true)
 

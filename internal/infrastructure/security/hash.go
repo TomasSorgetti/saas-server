@@ -2,6 +2,7 @@ package security
 
 import (
 	"crypto/sha256"
+	"encoding/hex"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -19,19 +20,18 @@ func ComparePasswords(hashedPassword, plainPassword string) bool {
 func HashToken(token string) (string, error) {
     hasher := sha256.New()
     hasher.Write([]byte(token))
-    preHashed := hasher.Sum(nil)
-
-    hash, err := bcrypt.GenerateFromPassword(preHashed, bcrypt.DefaultCost)
-    if err != nil {
-        return "", err
-    }
-    return string(hash), nil
+    hash := hasher.Sum(nil)
+    return hex.EncodeToString(hash), nil
 }
 
 func CompareToken(token, hash string) error {
+    computedHash, err := HashToken(token)
+    if err == nil && computedHash == hash {
+        return nil
+    }
+
     hasher := sha256.New()
     hasher.Write([]byte(token))
     preHashed := hasher.Sum(nil)
-
     return bcrypt.CompareHashAndPassword([]byte(hash), preHashed)
 }

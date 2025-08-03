@@ -15,9 +15,18 @@ type AuthUseCases struct {
     RefreshToken *RefreshTokenUseCase
     GoogleLogin *LoginGoogleUseCase
     GoogleCallback *GoogleCallbackUseCase
+    Logout *LogoutUseCase
 }
 
-func NewAuthUseCases(userRepo repository.UserRepository, suscriptionRepo repository.SubscriptionRepository, emailVerificationRepo repository.EmailVerificationRepository, sessionRepo repository.SessionRepository, emailService *email.EmailService, cacheService *cache.Cache) *AuthUseCases{
+func NewAuthUseCases(
+    userRepo repository.UserRepository, 
+    suscriptionRepo repository.SubscriptionRepository, 
+    emailVerificationRepo repository.EmailVerificationRepository, 
+    sessionRepo repository.SessionRepository, 
+    emailService *email.EmailService, 
+    cacheService *cache.Cache,
+    ) *AuthUseCases{
+        
     return &AuthUseCases{
         Login:      NewLoginUseCase(userRepo, emailVerificationRepo, sessionRepo, emailService),
         Register:   NewRegisterUserUseCase(userRepo, suscriptionRepo, emailService, cacheService),
@@ -27,5 +36,6 @@ func NewAuthUseCases(userRepo repository.UserRepository, suscriptionRepo reposit
         RefreshToken: NewRefreshTokenUseCase(userRepo, sessionRepo),
         GoogleLogin: NewLoginGoogleUseCase(userRepo, emailVerificationRepo, emailService),
         GoogleCallback: NewGoogleCallbackUseCase(),
+        Logout: NewLogoutUseCase(sessionRepo),
     }
 }

@@ -11,5 +11,6 @@ type SessionRepository interface {
     FindByRefreshTokenHash(ctx context.Context, refreshTokenHash string) (*entities.Session, error)
     Update(ctx context.Context, session *entities.Session) error
     Invalidate(ctx context.Context, accessTokenHash string) error
+    Delete(ctx context.Context, accessTokenHash string) error
     FindByUserID(ctx context.Context, userID int64) ([]*entities.Session, error)
 }

@@ -138,6 +138,11 @@ func (r *sessionRepository) Invalidate(ctx context.Context, accessTokenHash stri
     _, err := r.db.ExecContext(ctx, query, accessTokenHash)
     return err
 }
+func (r *sessionRepository) Delete(ctx context.Context, accessTokenHash string) error {
+    query := `DELETE FROM sessions WHERE access_token_hash = ?`
+    _, err := r.db.ExecContext(ctx, query, accessTokenHash)
+    return err
+}
 
 func (r *sessionRepository) FindByUserID(ctx context.Context, userID int64) ([]*entities.Session, error) {
     query := `SELECT id, user_id, access_token_hash, refresh_token_hash, expires_at, refresh_expires_at, is_valid, device_info, created_at, updated_at

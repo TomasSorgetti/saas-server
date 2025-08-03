@@ -120,7 +120,7 @@ func (uc *LoginUseCase) Execute(input dtos.LoginInput, deviceInfo string) (*dtos
 		return nil, err
 	}
 
-	accessTokenHash, err := security.HashToken(accessToken) // Asumiendo que tienes una función para hashear
+	accessTokenHash, err := security.HashToken(accessToken)
     if err != nil {
         return nil, fmt.Errorf("failed to hash access token: %w", err)
     }
