@@ -17,7 +17,7 @@ type AuthUseCases struct {
     GoogleCallback *GoogleCallbackUseCase
 }
 
-func NewAuthUseCases(userRepo repository.UserRepository, suscriptionRepo repository.SubscriptionRepository, emailVerificationRepo repository.EmailVerificationRepository, emailService *email.EmailService, cacheService *cache.Cache) *AuthUseCases{
+func NewAuthUseCases(userRepo repository.UserRepository, suscriptionRepo repository.SubscriptionRepository, emailVerificationRepo repository.EmailVerificationRepository, sessionRepo repository.SessionRepository, emailService *email.EmailService, cacheService *cache.Cache) *AuthUseCases{
     return &AuthUseCases{
         Login:      NewLoginUseCase(userRepo, emailVerificationRepo, emailService),
         Register:   NewRegisterUserUseCase(userRepo, suscriptionRepo, emailService, cacheService),

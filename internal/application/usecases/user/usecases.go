@@ -11,7 +11,7 @@ type UserUseCases struct {
     ChangePassword *ChangePasswordUseCase
 }
 
-func NewUserUseCases(userRepo repository.UserRepository, cacheService *cache.Cache, emailService *email.EmailService) *UserUseCases{
+func NewUserUseCases(userRepo repository.UserRepository, sessionRepo repository.SessionRepository, cacheService *cache.Cache, emailService *email.EmailService) *UserUseCases{
     return &UserUseCases{
         Profile:      NewProfileUseCase(userRepo, cacheService ),
         ChangePassword: NewChangePasswordUseCase(userRepo, cacheService, emailService),
