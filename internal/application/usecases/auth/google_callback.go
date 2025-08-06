@@ -89,7 +89,6 @@ func (uc *GoogleCallbackUseCase) Execute(ctx context.Context, code, state, devic
 	}
 	defer resp.Body.Close()
 
-	// Usar io.ReadAll en lugar de ioutil.ReadAll
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		uc.logger.Error().
@@ -326,6 +325,12 @@ func (uc *GoogleCallbackUseCase) Execute(ctx context.Context, code, state, devic
 		Email:        googleUser.Email,
 		FirstName:    user.FirstName,
 		LoginMethod:  "google",
+        LastName:     user.LastName,
+        Phone:        user.Phone,
+        Address:      user.Address,
+        Country:      user.Country,
+        WorkshopName: user.WorkshopName,
+        LastLogin:    user.LastLogin,
 		Subscription: user.Subscription,
 	}
 

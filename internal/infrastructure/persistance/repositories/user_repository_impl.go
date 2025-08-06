@@ -24,14 +24,14 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 func (r *UserRepository) Save(user *entities.User) (int, error) {
 	query := `
         INSERT INTO users (
-            email, password, role, first_name, last_name, phone, address, country,
-            workshop_name, is_active, deleted, last_login
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            email, password, login_method, role, first_name, last_name, phone, address, country,
+            workshop_name, is_active, deleted, verified, last_login
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `
 	res, err := r.db.Exec(query,
-		user.Email, user.Password, user.Role, user.FirstName, user.LastName,
+		user.Email, user.Password, user.LoginMethod, user.Role, user.FirstName, user.LastName,
 		user.Phone, user.Address, user.Country, user.WorkshopName, user.IsActive,
-		user.Deleted, sql.NullString{String: user.LastLogin, Valid: user.LastLogin != ""},
+		user.Deleted, user.Verified, sql.NullString{String: user.LastLogin, Valid: user.LastLogin != ""},
 	)
 
 	if err != nil {
