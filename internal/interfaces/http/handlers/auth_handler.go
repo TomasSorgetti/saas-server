@@ -1,9 +1,11 @@
 package handlers
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 
 	"luthierSaas/internal/application/usecases/auth"
 	"luthierSaas/internal/interfaces/http/dtos"
@@ -213,13 +215,67 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 }
 
 func (h *AuthHandler) GoogleLogin(c *gin.Context) {
-    err := h.googleLoginUC.Execute()
-	
-	c.Error(customErr.New(http.StatusInternalServerError, "not implemented", err.Error()))
+	url, err := h.googleLoginUC.Execute(c.Request.Context())
+	if err != nil {
+		c.Error(customErr.New(http.StatusInternalServerError, "Failed to generate Google login URL", err.Error()))
+		return
+	}
 
+	c.Redirect(http.StatusTemporaryRedirect, url)
 }
 
 func (h *AuthHandler) GoogleCallback(c *gin.Context) {
-    err := h.googleCallbackUC.Execute()
-	c.Error(customErr.New(http.StatusInternalServerError, "not implemented", err.Error()))
+	// Extraer code y state de la query string
+	code := c.Query("code")
+	state := c.Query("state")
+	if code == "" || state == "" {
+		c.Error(customErr.New(http.StatusBadRequest, "Missing code or state", ""))
+		return
+	}
+
+	// Obtener deviceInfo desde User-Agent
+	ua := useragent.New(c.GetHeader("User-Agent"))
+	browser, version := ua.Browser()
+	deviceType := "Desktop"
+	if ua.Mobile() {
+		deviceType = "Mobile"
+	}
+	deviceInfo := fmt.Sprintf("%s %s, %s, %s", browser, version, ua.OS(), deviceType)
+
+	// Ejecutar el caso de uso
+	result, err := h.googleCallbackUC.Execute(c.Request.Context(), code, state, deviceInfo)
+	if err != nil {
+		c.Error(customErr.New(http.StatusInternalServerError, "Failed to process Google callback", err.Error()))
+		return
+	}
+
+	// Configurar la URL de redirección al frontend
+	redirectURL, err := url.Parse("http://localhost:5173/auth/google/callback")
+	if err != nil {
+		c.Error(customErr.New(http.StatusInternalServerError, "Failed to parse redirect URL", err.Error()))
+		return
+	}
+
+	// Agregar parámetros a la query string si requiere verificación
+	query := redirectURL.Query()
+	if result.VerificationRequired {
+		query.Set("verificationRequired", "true")
+		query.Set("verificationToken", result.VerificationToken)
+		query.Set("verificationCodeExpiresAt", result.VerificationExpiresAt.Format("2006-01-02T15:04:05Z07:00"))
+	} else {
+		// Establecer cookies para access_token y refresh_token
+		c.SetCookie("access_token", result.AccessToken, 3600, "/", "", false, true)
+		c.SetCookie("refresh_token", result.RefreshToken, 604800, "/", "", false, true)
+		// Opcional: pasar el perfil como JSON en la query string si el frontend lo necesita inmediatamente
+		profileJSON, err := json.Marshal(result.Profile)
+		if err != nil {
+			c.Error(customErr.New(http.StatusInternalServerError, "Failed to marshal profile", err.Error()))
+			return
+		}
+		query.Set("profile", string(profileJSON))
+	}
+	redirectURL.RawQuery = query.Encode()
+
+	// Redirigir al frontend
+	c.Redirect(http.StatusTemporaryRedirect, redirectURL.String())
 }

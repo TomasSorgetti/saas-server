@@ -77,7 +77,7 @@ func SetupAuthRoutes(api *gin.RouterGroup, authHandler *handlers.AuthHandler, ca
         auth.POST("/resend-code", resendCodeLimiter, authHandler.ResendVerificationCode)
         auth.POST("/refresh", middlewares.RefreshMiddleware(), refreshLimiter, authHandler.RefreshToken)
         auth.POST("/logout", logoutLimiter, authHandler.Logout)
-        auth.POST("/google/login", authHandler.GoogleLogin)
-        auth.POST("/google/callback", authHandler.GoogleCallback)
+        auth.GET("/google/login", authHandler.GoogleLogin)
+        auth.GET("/google/callback", authHandler.GoogleCallback)
     }
 }

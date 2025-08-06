@@ -52,3 +52,25 @@ func (r *SubscriptionRepository) GetFreeTierPlanID() (int, error) {
     }
     return planID, nil
 }
+
+func (r *SubscriptionRepository) GetFreeTierPlan() (*entities.SubscriptionPlan, error) {
+    query := `SELECT * FROM subscription_plans WHERE name = 'Free Tier'`
+    var sub entities.SubscriptionPlan
+    err := r.db.QueryRow(query).Scan(&sub.ID, &sub.Name, &sub.Description, &sub.Price, &sub.DurationDays, &sub.CreatedAt, &sub.UpdatedAt)
+    if err == sql.ErrNoRows {
+        return nil, fmt.Errorf("free tier plan not found")
+    }
+    if err != nil {
+        return nil, fmt.Errorf("failed to query Free Tier plan: %w", err)
+    }
+    subscription := &entities.SubscriptionPlan{
+        ID:           int(sub.ID),
+        Name:         sub.Name,
+        Description:  sub.Description,
+        Price:        sub.Price,
+        DurationDays: sub.DurationDays,
+        CreatedAt:    sub.CreatedAt,
+        UpdatedAt:    sub.UpdatedAt,
+    }
+    return subscription, nil
+}

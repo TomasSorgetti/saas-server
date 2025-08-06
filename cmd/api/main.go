@@ -25,7 +25,7 @@ func main() {
     }
     defer db.Close()
 
-    container, emailService := di.NewContainer(db.DB)
+    container, emailService := di.NewContainer(db.DB, cfg)
     go emailService.StartWorker(context.Background())
 
     r := gin.Default()

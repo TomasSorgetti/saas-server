@@ -1,9 +1,13 @@
 package entities
 
+import "time"
+
 type User struct {
 	ID           int
 	Email        string
 	Password     string
+	GoogleID     string
+	LoginMethod  *string
 	Role         string
 	FirstName    string
 	LastName     string
@@ -13,8 +17,8 @@ type User struct {
 	WorkshopName string
 	IsActive     bool
 	Deleted      bool
-	LastLogin    string
 	Verified     bool
-	LoginMethod  *string
+	CreatedAt    time.Time
+	LastLogin    string
 	Subscription *Subscription
 }

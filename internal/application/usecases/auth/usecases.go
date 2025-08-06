@@ -6,6 +6,7 @@ import (
 	"luthierSaas/internal/interfaces/repository"
 
 	"github.com/rs/zerolog"
+	"golang.org/x/oauth2"
 )
 
 type AuthUseCases struct {
@@ -28,6 +29,7 @@ func NewAuthUseCases(
     emailService *email.EmailService, 
     cacheService *cache.Cache,
     logger      *zerolog.Logger,
+    googleOAuthConfig *oauth2.Config,
     ) *AuthUseCases{
         
     return &AuthUseCases{
@@ -37,8 +39,8 @@ func NewAuthUseCases(
         VerifyEmail: NewVerifyEmailUseCase(userRepo, emailVerificationRepo),
         ResendVerificationCode: NewResendVerificationCodeUseCase(userRepo, emailVerificationRepo, emailService),
         RefreshToken: NewRefreshTokenUseCase(userRepo, sessionRepo),
-        GoogleLogin: NewLoginGoogleUseCase(userRepo, emailVerificationRepo, emailService),
-        GoogleCallback: NewGoogleCallbackUseCase(),
+        GoogleLogin: NewLoginGoogleUseCase(googleOAuthConfig, cacheService),
+        GoogleCallback: NewGoogleCallbackUseCase(googleOAuthConfig, userRepo, suscriptionRepo, emailVerificationRepo, sessionRepo, emailService, cacheService, logger),
         Logout: NewLogoutUseCase(sessionRepo, logger),
     }
 }
