@@ -105,7 +105,6 @@ func (uc *GoogleCallbackUseCase) Execute(ctx context.Context, code, state, devic
 		return nil, fmt.Errorf("failed to parse user info: %w", err)
 	}
 
-	// Buscar o crear usuario
 	user, err := uc.userRepo.FindByEmail(googleUser.Email)
 	if err != nil {
 		uc.logger.Error().
@@ -117,7 +116,6 @@ func (uc *GoogleCallbackUseCase) Execute(ctx context.Context, code, state, devic
 
 	var userID int
 	if user == nil {
-		// Crear nuevo usuario
 		loginMethod := "google"
 		user = &entities.User{
 			Email:       googleUser.Email,
@@ -139,7 +137,6 @@ func (uc *GoogleCallbackUseCase) Execute(ctx context.Context, code, state, devic
 			return nil, fmt.Errorf("failed to save user: %w", err)
 		}
 
-		// Crear suscripción gratuita
 		plan, err := uc.subscriptionRepo.GetFreeTierPlan()
 		if err != nil {
 			uc.logger.Error().
@@ -188,7 +185,6 @@ func (uc *GoogleCallbackUseCase) Execute(ctx context.Context, code, state, devic
 		}
 	}
 
-	// Manejar verificación de email
 	if !user.Verified {
 		verificationCode, err := security.GenerateVerificationCode(6)
 		if err != nil {
@@ -331,6 +327,7 @@ func (uc *GoogleCallbackUseCase) Execute(ctx context.Context, code, state, devic
         Country:      user.Country,
         WorkshopName: user.WorkshopName,
         LastLogin:    user.LastLogin,
+		HasPassword:  user.Password != "",
 		Subscription: user.Subscription,
 	}
 

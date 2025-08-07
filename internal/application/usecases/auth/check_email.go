@@ -25,10 +25,11 @@ func (uc *CheckEmailUseCase) Execute(ctx context.Context, email string) (bool, e
 
     cached, err := uc.cacheService.Get(ctx, cacheKey)
     if err == nil && cached != "" {
-        if cached == "true" {
-            return true, nil
-        } else if cached == "false" {
-            return false, nil
+        switch cached {
+            case "true":
+                return true, nil
+            case "false":
+                return false, nil
         }
     }
 

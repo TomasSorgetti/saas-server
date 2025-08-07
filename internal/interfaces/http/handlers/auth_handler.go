@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 
@@ -215,17 +216,28 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 }
 
 func (h *AuthHandler) GoogleLogin(c *gin.Context) {
-	url, err := h.googleLoginUC.Execute(c.Request.Context())
+	googleUrl, err := h.googleLoginUC.Execute(c.Request.Context())
 	if err != nil {
-		c.Error(customErr.New(http.StatusInternalServerError, "Failed to generate Google login URL", err.Error()))
-		return
-	}
+        redirectURL, _ := url.Parse("http://localhost:5173/auth/login")
+        query := redirectURL.Query()
+        query.Set("error", "failed_to_generate_google_url")
+        query.Set("message", "No se pudo generar la URL de inicio de sesión con Google")
+        redirectURL.RawQuery = query.Encode()
+        c.Redirect(http.StatusTemporaryRedirect, redirectURL.String())
+        return
+    }
 
-	c.Redirect(http.StatusTemporaryRedirect, url)
+	c.Redirect(http.StatusTemporaryRedirect, googleUrl)
 }
 
 func (h *AuthHandler) GoogleCallback(c *gin.Context) {
-	// Extraer code y state de la query string
+	redirectErrorURL, err := url.Parse("http://localhost:5173/auth/login")
+	if err != nil {
+        log.Printf("Failed to parse error redirect URL: %v", err)
+        c.Redirect(http.StatusTemporaryRedirect, "http://localhost:5173/auth/login?error=internal_error&message=Error%20interno%20del%20servidor")
+        return
+    }
+
 	code := c.Query("code")
 	state := c.Query("state")
 	if code == "" || state == "" {
@@ -233,7 +245,6 @@ func (h *AuthHandler) GoogleCallback(c *gin.Context) {
 		return
 	}
 
-	// Obtener deviceInfo desde User-Agent
 	ua := useragent.New(c.GetHeader("User-Agent"))
 	browser, version := ua.Browser()
 	deviceType := "Desktop"
@@ -242,40 +253,46 @@ func (h *AuthHandler) GoogleCallback(c *gin.Context) {
 	}
 	deviceInfo := fmt.Sprintf("%s %s, %s, %s", browser, version, ua.OS(), deviceType)
 
-	// Ejecutar el caso de uso
 	result, err := h.googleCallbackUC.Execute(c.Request.Context(), code, state, deviceInfo)
 	if err != nil {
-		c.Error(customErr.New(http.StatusInternalServerError, "Failed to process Google callback", err.Error()))
-		return
-	}
+        query := redirectErrorURL.Query()
+        query.Set("error", "google_callback_failed")
+        query.Set("message", "Error al procesar la autenticación con Google")
+        redirectErrorURL.RawQuery = query.Encode()
+        c.Redirect(http.StatusTemporaryRedirect, redirectErrorURL.String())
+        return
+    }
 
-	// Configurar la URL de redirección al frontend
 	redirectURL, err := url.Parse("http://localhost:5173/auth/google/callback")
 	if err != nil {
-		c.Error(customErr.New(http.StatusInternalServerError, "Failed to parse redirect URL", err.Error()))
-		return
-	}
+        query := redirectErrorURL.Query()
+        query.Set("error", "invalid_redirect_url")
+        query.Set("message", "Error al procesar la URL de redirección")
+        redirectErrorURL.RawQuery = query.Encode()
+        c.Redirect(http.StatusTemporaryRedirect, redirectErrorURL.String())
+        return
+    }
 
-	// Agregar parámetros a la query string si requiere verificación
 	query := redirectURL.Query()
 	if result.VerificationRequired {
 		query.Set("verificationRequired", "true")
 		query.Set("verificationToken", result.VerificationToken)
 		query.Set("verificationCodeExpiresAt", result.VerificationExpiresAt.Format("2006-01-02T15:04:05Z07:00"))
 	} else {
-		// Establecer cookies para access_token y refresh_token
 		c.SetCookie("access_token", result.AccessToken, 3600, "/", "", false, true)
 		c.SetCookie("refresh_token", result.RefreshToken, 604800, "/", "", false, true)
-		// Opcional: pasar el perfil como JSON en la query string si el frontend lo necesita inmediatamente
 		profileJSON, err := json.Marshal(result.Profile)
 		if err != nil {
-			c.Error(customErr.New(http.StatusInternalServerError, "Failed to marshal profile", err.Error()))
-			return
-		}
+            query := redirectErrorURL.Query()
+            query.Set("error", "profile_marshal_failed")
+            query.Set("message", "Error al procesar el perfil del usuario")
+            redirectErrorURL.RawQuery = query.Encode()
+            c.Redirect(http.StatusTemporaryRedirect, redirectErrorURL.String())
+            return
+        }
 		query.Set("profile", string(profileJSON))
 	}
 	redirectURL.RawQuery = query.Encode()
 
-	// Redirigir al frontend
 	c.Redirect(http.StatusTemporaryRedirect, redirectURL.String())
 }

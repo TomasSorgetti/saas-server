@@ -254,6 +254,7 @@ func (uc *LoginUseCase) Execute(input dtos.LoginInput, deviceInfo string) (*dtos
         WorkshopName: user.WorkshopName,
         LastLogin:    user.LastLogin,
 		LoginMethod:  func() string { if user.LoginMethod != nil { return *user.LoginMethod }; return "" }(),
+        HasPassword:  user.Password != "",
 		Subscription: user.Subscription,
     }
 

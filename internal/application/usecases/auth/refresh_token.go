@@ -95,6 +95,7 @@ func (uc *RefreshTokenUseCase) Execute(ctx context.Context, refreshToken string,
         Country:      user.Country,
         WorkshopName: user.WorkshopName,
         LastLogin:    user.LastLogin,
+        HasPassword:  user.Password != "",
         Subscription: user.Subscription,
     }
 

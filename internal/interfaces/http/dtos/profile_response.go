@@ -13,5 +13,6 @@ type ProfileResponse struct {
 	WorkshopName string            `json:"workshop_name"`
 	LastLogin    string            `json:"last_login"`
 	LoginMethod  string            `json:"login_method"`
+	HasPassword  bool			   `json:"has_password"`
 	Subscription *entities.Subscription `json:"subscription,omitempty"`
 }

@@ -13,7 +13,7 @@ import (
 
 type LoginGoogleUseCase struct {
 	oauthConfig  *oauth2.Config
-	cacheService *cache.Cache // Agregado para almacenar el estado
+	cacheService *cache.Cache
 }
 
 func NewLoginGoogleUseCase(oauthConfig *oauth2.Config, cacheService *cache.Cache) *LoginGoogleUseCase {
